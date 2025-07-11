@@ -1,41 +1,43 @@
-﻿using Skopia.Domain.Entidades; // Importa a entidade de domínio 'ComentarioTarefa'
-using System; // Necessário para Guid
-using System.Collections.Generic; // Necessário para IEnumerable
-using System.Threading.Tasks; // Necessário para Task
+﻿using Skopia.Domain.Entidades; // Necessário para referenciar a entidade ComentarioTarefa
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace Skopia.Domain.Repositorios.Interfaces;
+namespace Skopia.Domain.Repositorios.Interfaces; ;
 
 /// <summary>
-/// Define o contrato (ou "Porta" em uma arquitetura hexagonal) para a persistência e recuperação
-/// de entidades 'ComentarioTarefa'. Esta interface reside na camada de domínio, garantindo que a
-/// lógica de negócio principal opere apenas com suas próprias entidades e não tenha dependência
-/// direta de como os comentários são armazenados (banco de dados, serviço externo, etc.).
-///
-/// Ao definir esta interface no domínio, estamos aplicando o Princípio da Inversão de Dependência (DIP):
-/// o domínio define a abstração que a camada de infraestrutura (dados) deve implementar.
-/// Todos os métodos retornam 'Task' para indicar que são operações assíncronas, o que é uma
-/// boa prática para operações de I/O, melhorando a escalabilidade e a responsividade da aplicação.
+/// Define o contrato para operações de acesso a dados (Data Access Operations)
+/// específicas da entidade <see cref="ComentarioTarefa"/>.
+/// Esta interface herda de <see cref="IRepositoryBase{TEntity}"/> para operações CRUD genéricas,
+/// promovendo reuso de código e padronização das interações com o banco de dados.
 /// </summary>
 public interface IRepositorioComentarioTarefa
 {
     /// <summary>
-    /// Obtém todos os comentários associados a um ID de tarefa específico de forma assíncrona.
+    /// Obtém de forma assíncrona todos os comentários associados a um determinado ID de tarefa.
+    /// Este método é crucial para exibir o histórico de comentários de uma tarefa específica,
+    /// otimizando a consulta ao banco de dados para buscar apenas os dados relevantes.
     /// </summary>
-    /// <param name="tarefaId">O ID (Guid) da tarefa cujos comentários serão recuperados.</param>
+    /// <param name="tarefaId">O <see cref="Guid"/> único da tarefa à qual os comentários pertencem.</param>
     /// <returns>
-    /// Uma coleção de entidades 'ComentarioTarefa'. Retorna uma coleção vazia (não null)
-    /// se nenhum comentário for encontrado para o 'tarefaId' fornecido.
+    /// Uma <see cref="IEnumerable{T}"/> de <see cref="ComentarioTarefa"/> contendo todos os comentários
+    /// encontrados para o <paramref name="tarefaId"/> especificado.
+    /// Retorna uma coleção vazia se nenhum comentário for encontrado, nunca <c>null</c>.
     /// </returns>
     Task<IEnumerable<ComentarioTarefa>> ObterTodosPorTarefaIdAsync(Guid tarefaId);
 
     /// <summary>
-    /// Adiciona um novo comentário de tarefa ao armazenamento de forma assíncrona.
+    /// Cria de forma assíncrona um novo comentário de tarefa no repositório.
+    /// Embora <see cref="IRepositoryBase{TEntity}"/> já forneça um método <c>AddAsync</c>,
+    /// este método específico <c>CriarAsync</c> pode ser utilizado para encapsular
+    /// lógicas de negócio adicionais que são exclusivas do processo de criação de um <see cref="ComentarioTarefa"/>,
+    /// como validações específicas, processamento de texto, ou integração com outros serviços
+    /// antes da persistência. Se não houver lógica adicional, <c>AddAsync</c> pode ser preferível.
     /// </summary>
-    /// <param name="comentario">A entidade 'ComentarioTarefa' a ser criada.</param>
+    /// <param name="comentario">O objeto <see cref="ComentarioTarefa"/> a ser persistido.</param>
     /// <returns>
-    /// A entidade 'ComentarioTarefa' criada, que pode incluir um ID gerado pelo sistema
-    /// de persistência (ex: banco de dados) ou quaisquer outros valores padrão definidos
-    /// durante a operação de criação.
+    /// O objeto <see cref="ComentarioTarefa"/> que foi criado e persistido,
+    /// geralmente com seu <c>Id</c> gerado pelo banco de dados, se aplicável.
     /// </returns>
     Task<ComentarioTarefa> CriarAsync(ComentarioTarefa comentario);
 }

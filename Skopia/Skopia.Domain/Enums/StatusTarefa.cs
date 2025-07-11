@@ -31,4 +31,5 @@ public enum StatusTarefa
     /// A tarefa foi cancelada. Este é um estado terminal que indica que a tarefa não será concluída.
     /// </summary>
     Cancelada = 3
+
 }
