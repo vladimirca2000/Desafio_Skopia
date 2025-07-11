@@ -1,0 +1,6 @@
+@Skopia.API_HostAddress = http://localhost:5078
+
+GET {{Skopia.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
