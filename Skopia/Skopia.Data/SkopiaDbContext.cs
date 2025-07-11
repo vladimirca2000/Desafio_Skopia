@@ -9,7 +9,7 @@ namespace Skopia.Data;
 
 public class SkopiaDbContext : DbContext
 {
-    // ... (construtor, DbSets, SaveChangesAsync permanecem os mesmos) ...
+    public SkopiaDbContext(DbContextOptions<SkopiaDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

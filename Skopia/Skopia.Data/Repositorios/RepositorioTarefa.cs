@@ -193,4 +193,16 @@ public class RepositorioTarefa : IRepositorioTarefa
                      .OrderBy(t => t.DataVencimento) // Ordena as tarefas pelo vencimento.
                      .ToListAsync();
     }
+
+    /// <inheritdoc/>
+    public async Task<bool> PossuiTarefasPendentesParaProjetoAsync(Guid projetoId)
+    {
+        // Verifica se existe *qualquer* tarefa para o projeto especificado que não esteja concluída nem cancelada.
+        // O filtro global de soft delete já garante que apenas tarefas não deletadas sejam consideradas.
+        // AnyAsync é altamente eficiente, pois ele só precisa encontrar o primeiro registro que satisfaça a condição
+        // e não carrega nenhum dado desnecessário para a memória.
+        return await _dbSet.AnyAsync(t => t.ProjetoId == projetoId &&
+                                       t.Status != StatusTarefa.Concluida &&
+                                       t.Status != StatusTarefa.Cancelada);
+    }
 }

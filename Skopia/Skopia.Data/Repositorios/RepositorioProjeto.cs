@@ -140,4 +140,7 @@ public class RepositorioProjeto : IRepositorioProjeto
         return await _context.Set<Tarefa>()
             .CountAsync(t => t.ProjetoId == projetoId); // Conta todas as tarefas associadas ao projeto especificado.
     }
+
+    /// <inheritdoc/>
+    
 }

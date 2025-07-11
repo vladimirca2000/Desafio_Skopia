@@ -21,6 +21,8 @@ public class Projeto : EntidadeBase // Herda de EntidadeBase, recebendo Id, Esta
     public Guid UsuarioId { get; private set; }
 
     // Coleção interna de tarefas.
+    // É importante notar que esta coleção pode ser populada pelo Entity Framework Core (lazy/eager loading).
+    // As operações sobre ela (AdicionarTarefa, RemoverTarefa) são consistentes dentro do limite do Aggregate.
     private readonly List<Tarefa> _tarefas;
 
     // Exposição da coleção de tarefas como IReadOnlyCollection<T> para garantir encapsulamento e imutabilidade externa.
@@ -102,12 +104,12 @@ public class Projeto : EntidadeBase // Herda de EntidadeBase, recebendo Id, Esta
     public void AdicionarTarefa(Tarefa novaTarefa)
     {
         ExcecaoDominio.Quando(novaTarefa == null, "A tarefa não pode ser nula.");
-        ExcecaoDominio.Quando(novaTarefa.ProjetoId != Id, "A tarefa pertence a outro projeto e não pode ser adicionada aqui.");
+        ExcecaoDominio.Quando(novaTarefa?.Id != Id, "A tarefa pertence a outro projeto e não pode ser adicionada aqui.");
 
         ExcecaoDominio.Quando(_tarefas.Count >= LIMITE_MAXIMO_TAREFAS,
             $"Limite máximo de {LIMITE_MAXIMO_TAREFAS} tarefas por projeto atingido. Não é possível adicionar mais tarefas.");
-
-        _tarefas.Add(novaTarefa);
+        if(novaTarefa is not null)
+            _tarefas.Add(novaTarefa);
     }
 
     /// <summary>
@@ -121,7 +123,8 @@ public class Projeto : EntidadeBase // Herda de EntidadeBase, recebendo Id, Esta
         var tarefaParaRemover = _tarefas.FirstOrDefault(t => t.Id == tarefaId);
         ExcecaoDominio.Quando(tarefaParaRemover == null, "Tarefa não encontrada neste projeto.");
 
-        _tarefas.Remove(tarefaParaRemover);
+        if (tarefaParaRemover is not null)
+            _tarefas.Remove(tarefaParaRemover);
     }
 
     /// <summary>
@@ -134,28 +137,8 @@ public class Projeto : EntidadeBase // Herda de EntidadeBase, recebendo Id, Esta
         return _tarefas.FirstOrDefault(t => t.Id == tarefaId);
     }
 
-    /// <summary>
-    /// Verifica se o projeto possui tarefas que ainda não foram concluídas.
-    /// </summary>
-    /// <returns>True se houver tarefas pendentes ou em andamento; caso contrário, false.</returns>
-    public bool PossuiTarefasPendentes()
-    {
-        // O filtro global de consulta do EF Core (Global Query Filter) garantirá que apenas
-        // as tarefas *não deletadas logicamente* sejam consideradas aqui, mantendo a integridade
-        // da regra de negócio ao consultar a coleção de Tarefas.
-        return _tarefas.Any(t => t.EstaPendente() || t.Status == StatusTarefa.EmAndamento);
-    }
-
-    /// <summary>
-    /// Avalia se o projeto pode ser logicamente removido (soft delete), com base nas regras de negócio definidas.
-    /// Esta é uma validação de domínio. A operação de soft delete em si é feita chamando o método Deletar()
-    /// (herdado de EntidadeBase) e persistindo a mudança através do repositório.
-    /// </summary>
-    /// <returns>True se o projeto puder ser removido logicamente; caso contrário, false.</returns>
-    public bool PodeSerRemovido()
-    {
-        // A regra de negócio permanece: um projeto só pode ser soft-deletado se não tiver tarefas pendentes.
-        // A chamada real para 'Deletar()' na entidade será feita por um serviço de aplicação, após verificar esta condição.
-        return !PossuiTarefasPendentes();
-    }
+    // REMOVIDOS: PossuiTarefasPendentes() e PodeSerRemovido()
+    // A lógica de "se um projeto pode ser removido" agora reside no ProjetoService.
+    // A lógica de "possui tarefas pendentes" para um projeto será uma consulta direta no IRepositorioTarefa,
+    // que é usada pelo ProjetoService.
 }

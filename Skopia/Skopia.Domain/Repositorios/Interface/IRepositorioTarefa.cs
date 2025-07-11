@@ -150,4 +150,14 @@ public interface IRepositorioTarefa
     /// Retorna uma coleção vazia se nenhuma tarefa for encontrada no intervalo.
     /// </returns>
     Task<IEnumerable<Tarefa>> ObterTarefasPorPeriodoDeVencimentoAsync(DateTime dataInicioVencimento, DateTime dataFimVencimento);
+
+
+    /// <summary>
+    /// Verifica de forma assíncrona se um projeto possui tarefas que ainda não foram concluídas ou canceladas.
+    /// Esta é uma consulta otimizada para verificar a existência de tarefas "ativas" para um dado projeto.
+    /// O filtro global de soft delete será aplicado automaticamente.
+    /// </summary>
+    /// <param name="projetoId">O ID do projeto a ser verificado.</param>
+    /// <returns>True se houver tarefas pendentes ou em andamento para o projeto; caso contrário, false.</returns>
+    Task<bool> PossuiTarefasPendentesParaProjetoAsync(Guid projetoId);
 }

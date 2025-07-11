@@ -74,4 +74,7 @@ public interface IRepositorioProjeto
     /// <param name="projetoId">O ID (Guid) do projeto.</param>
     /// <returns>O número total de tarefas no projeto.</returns>
     Task<int> ObterContagemTarefasAsync(Guid projetoId);
+
+    
+
 }

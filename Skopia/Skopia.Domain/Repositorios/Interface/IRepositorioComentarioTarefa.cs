@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Skopia.Domain.Repositorios.Interfaces; ;
+namespace Skopia.Domain.Repositorios.Interfaces;
 
 /// <summary>
 /// Define o contrato para operações de acesso a dados (Data Access Operations)
