@@ -1,26 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations; // Necessário para [Required], [StringLength], [RegularExpression]
 
-namespace Skopia.Servicos.Modelos;
+namespace Skopia.Services.Modelos;
 
 /// <summary>
 /// DTO para representar uma tarefa.
 /// </summary>
 public class TarefaDto
 {
-    public Guid Id { get; set; } // Ajustado para Guid
-    public string Titulo { get; set; } = string.Empty; // Traduzido
-    public string? Descricao { get; set; } // Traduzido
-    public DateTime DataCriacao { get; set; } // Traduzido
-    public DateTime? DataVencimento { get; set; } // Traduzido
-    public string Status { get; set; } = string.Empty; // Traduzido (valores em PT-BR)
-    public string Prioridade { get; set; } = string.Empty; // Traduzido (valores em PT-BR)
-    public Guid ProjetoId { get; set; } // Ajustado para Guid, Traduzido
-    public Guid UsuarioId { get; set; } // Ajustado para Guid, Traduzido
-    public DateTime? DataConclusao { get; set; } // Adicionado para refletir a entidade de domínio
+    public Guid Id { get; set; } 
+    public string Titulo { get; set; } = string.Empty; 
+    public string? Descricao { get; set; } 
+    public DateTime DataCriacao { get; set; } 
+    public DateTime? DataVencimento { get; set; } 
+    public string Status { get; set; } = string.Empty; 
+    public string Prioridade { get; set; } = string.Empty; 
+    public Guid ProjetoId { get; set; } 
+    public Guid UsuarioId { get; set; } 
+    public DateTime? DataConclusao { get; set; } 
 
     // Referências aos DTOs de Comentário e Histórico, que estarão em outro arquivo.
-    public List<ComentarioTarefaDto> Comentarios { get; set; } = new List<ComentarioTarefaDto>(); // Traduzido
-    public List<HistoricoTarefaDto> Historico { get; set; } = new List<HistoricoTarefaDto>(); // Traduzido
+    public List<ComentarioTarefaDto> Comentarios { get; set; } = new List<ComentarioTarefaDto>(); 
+    public List<HistoricoTarefaDto> Historico { get; set; } = new List<HistoricoTarefaDto>(); 
 }
 
 /// <summary>
@@ -28,24 +28,24 @@ public class TarefaDto
 /// </summary>
 public class CriarTarefaDto
 {
-    [Required(ErrorMessage = "O título da tarefa é obrigatório")] // Traduzido
-    [StringLength(100, ErrorMessage = "O título não pode exceder 100 caracteres")] // Traduzido
-    public string Titulo { get; set; } = string.Empty; // Traduzido
+    [Required(ErrorMessage = "O título da tarefa é obrigatório")] 
+    [StringLength(100, ErrorMessage = "O título não pode exceder 100 caracteres")] 
+    public string Titulo { get; set; } = string.Empty; 
 
-    [StringLength(500, ErrorMessage = "A descrição não pode exceder 500 caracteres")] // Traduzido
-    public string? Descricao { get; set; } // Traduzido
+    [StringLength(500, ErrorMessage = "A descrição não pode exceder 500 caracteres")] 
+    public string? Descricao { get; set; } 
 
-    public DateTime? DataVencimento { get; set; } // Traduzido
+    public DateTime? DataVencimento { get; set; } 
 
-    [Required(ErrorMessage = "A prioridade é obrigatória")] // Traduzido
-    [RegularExpression("^(Baixa|Media|Alta)$", ErrorMessage = "A prioridade deve ser Baixa, Media ou Alta")] // Valores e mensagem traduzidos
-    public string Prioridade { get; set; } = "Media"; // Valor padrão traduzido
+    [Required(ErrorMessage = "A prioridade é obrigatória")] 
+    [RegularExpression("^(Baixa|Media|Alta)$", ErrorMessage = "A prioridade deve ser Baixa, Media ou Alta")] 
+    public string Prioridade { get; set; } = "Media"; 
 
-    [Required(ErrorMessage = "O ID do projeto é obrigatório")] // Traduzido
-    public Guid ProjetoId { get; set; } // Ajustado para Guid
+    [Required(ErrorMessage = "O ID do projeto é obrigatório")] 
+    public Guid ProjetoId { get; set; } //
 
-    [Required(ErrorMessage = "O ID do usuário é obrigatório")] // Traduzido
-    public Guid UsuarioId { get; set; } // O usuário criador/responsável pela tarefa
+    [Required(ErrorMessage = "O ID do usuário é obrigatório")] 
+    public Guid UsuarioId { get; set; } 
 }
 
 /// <summary>
@@ -53,19 +53,19 @@ public class CriarTarefaDto
 /// </summary>
 public class AtualizarTarefaDto
 {
-    [Required(ErrorMessage = "O título da tarefa é obrigatório")] // Traduzido
-    [StringLength(100, ErrorMessage = "O título não pode exceder 100 caracteres")] // Traduzido
-    public string Titulo { get; set; } = string.Empty; // Traduzido
+    [Required(ErrorMessage = "O título da tarefa é obrigatório")] 
+    [StringLength(100, ErrorMessage = "O título não pode exceder 100 caracteres")] 
+    public string Titulo { get; set; } = string.Empty; 
 
-    [StringLength(500, ErrorMessage = "A descrição não pode exceder 500 caracteres")] // Traduzido
-    public string? Descricao { get; set; } // Traduzido
+    [StringLength(500, ErrorMessage = "A descrição não pode exceder 500 caracteres")] 
+    public string? Descricao { get; set; } 
 
-    public DateTime? DataVencimento { get; set; } // Traduzido
+    public DateTime? DataConclusao { get; set; } 
 
-    [Required(ErrorMessage = "O status é obrigatório")] // Traduzido
-    [RegularExpression("^(Pendente|EmAndamento|Concluida|Cancelada)$", ErrorMessage = "O status deve ser Pendente, EmAndamento, Concluida ou Cancelada")] // Valores e mensagem traduzidos
-    public string Status { get; set; } = string.Empty; // Traduzido
+    [Required(ErrorMessage = "O status é obrigatório")] 
+    [RegularExpression("^(Pendente|EmAndamento|Concluida|Cancelada)$", ErrorMessage = "O status deve ser Pendente, EmAndamento, Concluida ou Cancelada")] 
+    public string Status { get; set; } = string.Empty; 
 
-    [Required(ErrorMessage = "O ID do usuário executor é obrigatório")] // Traduzido
-    public Guid UsuarioExecutorId { get; set; } // Traduzido para indicar o usuário que está fazendo a alteração
+    [Required(ErrorMessage = "O ID do usuário executor é obrigatório")] 
+    public Guid UsuarioExecutorId { get; set; } 
 }

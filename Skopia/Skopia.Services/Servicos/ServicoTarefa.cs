@@ -3,10 +3,10 @@ using Skopia.Domain.Entidades; // Entidades do domínio
 using Skopia.Domain.Enums; // Enums do domínio (StatusTarefa, PrioridadeTarefa)
 using Skopia.Domain.Excecoes; // Exceções de domínio
 using Skopia.Domain.Interfaces.UnitOfWork; // Interface da Unit of Work
-using Skopia.Servicos.Interfaces; // Interfaces dos serviços da aplicação
-using Skopia.Servicos.Modelos; // DTOs da aplicação
+using Skopia.Services.Interfaces;
+using Skopia.Services.Modelos; // DTOs da aplicação
 
-namespace Skopia.Servicos.Servicos; 
+namespace Skopia.Services.Servicos; 
 
 /// <summary>
 /// Implementação do serviço de aplicação para gerenciamento de tarefas.
@@ -148,9 +148,9 @@ public class ServicoTarefa : IServicoTarefa
         {
             tarefaExistente.AtualizarDescricao(atualizarTarefaDto.Descricao, atualizarTarefaDto.UsuarioExecutorId); // Passando usuarioExecutorId
         }
-        if (tarefaExistente.DataVencimento != atualizarTarefaDto.DataVencimento)
+        if (tarefaExistente.DataConclusao != atualizarTarefaDto.DataConclusao)
         {
-            tarefaExistente.AtualizarDataVencimento(atualizarTarefaDto.DataVencimento, atualizarTarefaDto.UsuarioExecutorId); // Passando usuarioExecutorId
+            tarefaExistente.AtualizarDataConclusao(atualizarTarefaDto.DataConclusao, atualizarTarefaDto.UsuarioExecutorId); // Passando usuarioExecutorId
         }
 
         // Converter string de status para o enum do domínio e aplicar a alteração

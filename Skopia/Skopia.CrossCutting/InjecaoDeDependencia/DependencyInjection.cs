@@ -8,10 +8,11 @@ using Skopia.Data.Repositorios; // Namespace para as implementações concretas 
 using Skopia.Data.UnitOfWork; // Namespace para a implementação concreta do UnitOfWork
 using Skopia.Domain.Interfaces.UnitOfWork; // Namespace para a interface do UnitOfWork
 using Skopia.Domain.Repositorios.Interfaces;
-using Skopia.Services.Servico;
-using Skopia.Servicos.Interfaces;
-using Skopia.Servicos.Mapeamento;
-using Skopia.Servicos.Servicos;
+using Skopia.Domain.Servicos.Interfaces;
+using Skopia.Domain.Servicos; 
+using Skopia.Services.Interfaces;
+using Skopia.Services.Mapeamento;
+using Skopia.Services.Servicos;
 using System.Reflection;
 
 namespace Skopia.CrossCutting;
@@ -55,9 +56,12 @@ public static class DependencyInjection
         services.AddScoped<IRepositorioComentarioTarefa, RepositorioComentarioTarefa>();
         services.AddScoped<IRepositorioHistoricoAlteracaoTarefa, RepositorioHistoricoAlteracaoTarefa>();
 
+        // REGISTRO DOS SERVIÇOS DE DOMÍNIO (com nomenclatura em português):
+        services.AddScoped<IProjetoServico, ProjetoServico>();
+
         // No método AddInfrastructure:
-        services.AddScoped<IServicoProjeto, ServicoProjeto>(); // Adicionado o novo segmento "Servicos"
-        services.AddScoped<IServicoTarefa, ServicoTarefa>();   // Adicionado o novo segmento "Servicos"
+        services.AddScoped<IServicoProjeto, ServicoProjeto>(); 
+        services.AddScoped<IServicoTarefa, ServicoTarefa>();  
 
 
         // Adicione esta linha no método AddInfrastructure

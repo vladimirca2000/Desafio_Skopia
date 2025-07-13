@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using Skopia.Domain.Entidades; // Suas entidades de domínio
 using Skopia.Domain.Enums;    // Seus enums de domínio
-using Skopia.Servicos.Modelos; // Seus DTOs
+using Skopia.Services.Modelos; // Seus DTOs
 
-namespace Skopia.Servicos.Mapeamento;
+namespace Skopia.Services.Mapeamento;
 
 public class MapeamentoPerfil : Profile
 {
@@ -60,7 +60,7 @@ public class MapeamentoPerfil : Profile
         CreateMap<AtualizarTarefaDto, Tarefa>()
             .ForMember(dest => dest.Titulo, opt => opt.MapFrom(src => src.Titulo))
             .ForMember(dest => dest.Descricao, opt => opt.MapFrom(src => src.Descricao))
-            .ForMember(dest => dest.DataVencimento, opt => opt.MapFrom(src => src.DataVencimento))
+            .ForMember(dest => dest.DataConclusao, opt => opt.MapFrom(src => src.DataConclusao))
             .ForMember(dest => dest.Status, // Converte string de status para enum
                        opt => opt.MapFrom(src => ParseStatus(src.Status)));
 

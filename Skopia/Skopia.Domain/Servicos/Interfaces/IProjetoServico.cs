@@ -5,7 +5,7 @@
 /// Estes serviços encapsulam regras de negócio que envolvem a interação entre
 /// múltiplos agregados ou que dependem de infraestrutura (como repositórios).
 /// </summary>
-public interface IProjetoService
+public interface IProjetoServico
 {
     /// <summary>
     /// Avalia de forma assíncrona se um projeto pode ser logicamente removido (soft delete),

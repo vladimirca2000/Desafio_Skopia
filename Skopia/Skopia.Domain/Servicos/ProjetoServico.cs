@@ -8,7 +8,7 @@ namespace Skopia.Domain.Servicos;
 /// Este serviço encapsula a lógica de negócio que envolve a consulta a outras entidades
 /// (neste caso, Tarefas) para determinar o estado de um Projeto ou aplicar políticas.
 /// </summary>
-public class ProjetoService : IProjetoService
+public class ProjetoServico : IProjetoServico
 {
     private readonly IRepositorioTarefa _repositorioTarefa;
 
@@ -17,7 +17,7 @@ public class ProjetoService : IProjetoService
     /// </summary>
     /// <param name="repositorioTarefa">O repositório de tarefas, usado para consultar o estado das tarefas de um projeto.</param>
     /// <exception cref="ArgumentNullException">Lançada se alguma dependência for nula.</exception>
-    public ProjetoService(IRepositorioTarefa repositorioTarefa)
+    public ProjetoServico(IRepositorioTarefa repositorioTarefa)
     {
         _repositorioTarefa = repositorioTarefa ?? throw new ArgumentNullException(nameof(repositorioTarefa));
     }

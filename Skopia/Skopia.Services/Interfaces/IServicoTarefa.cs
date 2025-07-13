@@ -1,6 +1,6 @@
-﻿using Skopia.Servicos.Modelos; // Novo namespace para seus DTOs
+﻿using Skopia.Services.Modelos; // Novo namespace para seus DTOs
 
-namespace Skopia.Servicos.Interfaces;
+namespace Skopia.Services.Interfaces;
 
 /// <summary>
 /// Define o contrato para os serviços de manipulação de tarefas.

@@ -55,6 +55,7 @@ public class Tarefa : EntidadeBase
         RegistrarHistorico("Status", null, Status.ToString(), usuarioId); // Usa o UsuarioId da tarefa como o executor inicial
         RegistrarHistorico("Prioridade", null, Prioridade.ToString(), usuarioId); // Usa o UsuarioId da tarefa como o executor inicial
         RegistrarHistorico("DataVencimento", null, DataVencimento?.ToString("yyyy-MM-dd HH:mm:ss"), usuarioId); // Usa o UsuarioId da tarefa como o executor inicial
+        RegistrarHistorico("DataConclusao", null, DataConclusao?.ToString("yyyy-MM-dd HH:mm:ss"), usuarioId); // Usa o UsuarioId da tarefa como o executor inicial
     }
 
     // Métodos de comportamento do domínio com ajuste para usuarioExecutorId
@@ -126,6 +127,17 @@ public class Tarefa : EntidadeBase
         {
             RegistrarHistorico("DataVencimento", DataVencimento?.ToString("yyyy-MM-dd HH:mm:ss"), novaDataVencimento?.ToString("yyyy-MM-dd HH:mm:ss"), usuarioExecutorId); // Passa usuarioExecutorId
             DataVencimento = novaDataVencimento;
+        }
+    }
+
+    public void AtualizarDataConclusao(DateTime? novaDataConclusao, Guid usuarioExecutorId) 
+    {
+        ExcecaoDominio.Quando(novaDataConclusao.HasValue && novaDataConclusao.Value.Date < DateTime.UtcNow.Date, "A data de conclusão não pode ser no passado.");
+
+        if (DataConclusao != novaDataConclusao)
+        {
+            RegistrarHistorico("DataConclusao", DataConclusao?.ToString("yyyy-MM-dd HH:mm:ss"), novaDataConclusao?.ToString("yyyy-MM-dd HH:mm:ss"), usuarioExecutorId); // Passa usuarioExecutorId
+            DataConclusao = novaDataConclusao;
         }
     }
 

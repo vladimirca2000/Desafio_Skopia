@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations; 
 
-namespace Skopia.Servicos.Modelos;
+namespace Skopia.Services.Modelos;
 
 /// <summary>
 /// DTO para representar um comentário de tarefa.
