@@ -1,5 +1,4 @@
-﻿using System;
-using Skopia.Domain.Excecoes; // Adicionar para usar ExcecaoDominio
+﻿using Skopia.Domain.Excecoes; // Adicionar para usar ExcecaoDominio
 
 namespace Skopia.Domain.Entidades;
 

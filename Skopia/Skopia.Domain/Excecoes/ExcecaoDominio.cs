@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Skopia.Domain.Excecoes;
+﻿namespace Skopia.Domain.Excecoes;
 
 public class ExcecaoDominio: Exception
 {

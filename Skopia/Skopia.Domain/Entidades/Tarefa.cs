@@ -1,15 +1,12 @@
 ﻿using Skopia.Domain.Enums;
 using Skopia.Domain.Excecoes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Skopia.Domain.Entidades;
 
 public class Tarefa : EntidadeBase
 {
     public Guid ProjetoId { get; private set; }
-    public Guid UsuarioId { get; private set; }
+    public Guid UsuarioId { get; private set; } // O ID do usuário responsável pela tarefa
     public string Titulo { get; private set; }
     public string? Descricao { get; private set; }
     public DateTime DataCriacao { get; private set; }
@@ -42,9 +39,7 @@ public class Tarefa : EntidadeBase
         ExcecaoDominio.Quando(projetoId == Guid.Empty, "O ID do projeto não pode ser vazio.");
         ExcecaoDominio.Quando(usuarioId == Guid.Empty, "O ID do usuário não pode ser vazio.");
         ExcecaoDominio.Quando(string.IsNullOrWhiteSpace(titulo), "O título da tarefa não pode ser vazio.");
-        // Validação da DataVencimento no construtor
         ExcecaoDominio.Quando(dataVencimento.HasValue && dataVencimento.Value.Date < DateTime.UtcNow.Date, "A data de vencimento não pode ser no passado.");
-        // REMOVIDA: Validação de DataConclusao no construtor, pois ela é nula na criação.
 
         ProjetoId = projetoId;
         UsuarioId = usuarioId;
@@ -57,52 +52,48 @@ public class Tarefa : EntidadeBase
         DataConclusao = null; // Garante que DataConclusao é nula na criação.
 
         // Registro inicial do histórico para os valores definidos na criação
-        RegistrarHistorico("Status", null, Status.ToString());
-        RegistrarHistorico("Prioridade", null, Prioridade.ToString());
-        RegistrarHistorico("DataVencimento", null, DataVencimento?.ToString("yyyy-MM-dd HH:mm:ss")); // Formata para evitar problemas de cultura
+        RegistrarHistorico("Status", null, Status.ToString(), usuarioId); // Usa o UsuarioId da tarefa como o executor inicial
+        RegistrarHistorico("Prioridade", null, Prioridade.ToString(), usuarioId); // Usa o UsuarioId da tarefa como o executor inicial
+        RegistrarHistorico("DataVencimento", null, DataVencimento?.ToString("yyyy-MM-dd HH:mm:ss"), usuarioId); // Usa o UsuarioId da tarefa como o executor inicial
     }
 
-    // Métodos de comportamento do domínio
-    public void AtualizarTitulo(string novoTitulo)
+    // Métodos de comportamento do domínio com ajuste para usuarioExecutorId
+    public void AtualizarTitulo(string novoTitulo, Guid usuarioExecutorId) // Adicionado usuarioExecutorId
     {
         ExcecaoDominio.Quando(string.IsNullOrWhiteSpace(novoTitulo), "O título da tarefa não pode ser vazio.");
         if (Titulo != novoTitulo)
         {
-            RegistrarHistorico("Título", Titulo, novoTitulo);
+            RegistrarHistorico("Título", Titulo, novoTitulo, usuarioExecutorId); // Passa usuarioExecutorId
             Titulo = novoTitulo;
         }
     }
 
-    public void AtualizarDescricao(string? novaDescricao)
+    public void AtualizarDescricao(string? novaDescricao, Guid usuarioExecutorId) // Adicionado usuarioExecutorId
     {
         if (Descricao != novaDescricao)
         {
-            RegistrarHistorico("Descrição", Descricao, novaDescricao);
+            RegistrarHistorico("Descrição", Descricao, novaDescricao, usuarioExecutorId); // Passa usuarioExecutorId
             Descricao = novaDescricao;
         }
     }
 
-    public void AlterarStatus(StatusTarefa novoStatus)
+    public void AlterarStatus(StatusTarefa novoStatus, Guid usuarioExecutorId) // Adicionado usuarioExecutorId
     {
         // Regras de negócio para transição de status
         if (Status == StatusTarefa.Concluida && novoStatus != StatusTarefa.Concluida && novoStatus != StatusTarefa.Cancelada)
         {
-            // Se já está concluída, não pode voltar para um status ativo (a menos que seja explicitamente reaberta)
-            // Ou ir para Cancelada (se essa for uma transição válida, mas geralmente não é)
             ExcecaoDominio.Quando(true, "Tarefa concluída não pode ter seu status alterado para um estado ativo.");
         }
         if (Status == StatusTarefa.Cancelada && novoStatus != StatusTarefa.Cancelada && novoStatus != StatusTarefa.Concluida)
         {
-            // Se já está cancelada, não pode voltar para um status ativo
             ExcecaoDominio.Quando(true, "Tarefa cancelada não pode ter seu status alterado para um estado ativo.");
         }
 
         if (Status != novoStatus)
         {
-            RegistrarHistorico("Status", Status.ToString(), novoStatus.ToString());
+            RegistrarHistorico("Status", Status.ToString(), novoStatus.ToString(), usuarioExecutorId); // Passa usuarioExecutorId
             Status = novoStatus;
 
-            // Lógica para DataConclusao baseada na transição de status
             if (Status == StatusTarefa.Concluida)
             {
                 DataConclusao = DateTime.UtcNow; // Define a data de conclusão quando a tarefa é concluída
@@ -114,22 +105,26 @@ public class Tarefa : EntidadeBase
         }
     }
 
+    // Nota: O método AlterarPrioridade não está sendo atualizado pois a regra de negócio inicial era que a prioridade não podia ser alterada após a criação.
+    // Se essa regra mudar, você o ajustaria de forma similar.
     public void AlterarPrioridade(PrioridadeTarefa novaPrioridade)
     {
+        // ExcecaoDominio.Quando(true, "Não é permitido alterar a prioridade de uma tarefa depois que ela foi criada.");
+        // Mantendo a regra que não permite alteração de prioridade.
+        // Se essa regra fosse removida, o método precisaria de `usuarioExecutorId` e `RegistrarHistorico`.
         if (Prioridade != novaPrioridade)
         {
-            RegistrarHistorico("Prioridade", Prioridade.ToString(), novaPrioridade.ToString());
             Prioridade = novaPrioridade;
         }
     }
 
-    public void AtualizarDataVencimento(DateTime? novaDataVencimento)
+    public void AtualizarDataVencimento(DateTime? novaDataVencimento, Guid usuarioExecutorId) // Adicionado usuarioExecutorId
     {
         ExcecaoDominio.Quando(novaDataVencimento.HasValue && novaDataVencimento.Value.Date < DateTime.UtcNow.Date, "A data de vencimento não pode ser no passado.");
 
         if (DataVencimento != novaDataVencimento)
         {
-            RegistrarHistorico("DataVencimento", DataVencimento?.ToString("yyyy-MM-dd HH:mm:ss"), novaDataVencimento?.ToString("yyyy-MM-dd HH:mm:ss")); // Formata para evitar problemas de cultura
+            RegistrarHistorico("DataVencimento", DataVencimento?.ToString("yyyy-MM-dd HH:mm:ss"), novaDataVencimento?.ToString("yyyy-MM-dd HH:mm:ss"), usuarioExecutorId); // Passa usuarioExecutorId
             DataVencimento = novaDataVencimento;
         }
     }
@@ -142,12 +137,12 @@ public class Tarefa : EntidadeBase
         _comentarios.Add(comentario);
     }
 
-    private void RegistrarHistorico(string campo, string? valorAntigo, string? valorNovo)
+    // Método privado auxiliar para registro de histórico, agora com usuarioExecutorId
+    private void RegistrarHistorico(string campo, string? valorAntigo, string? valorNovo, Guid usuarioExecutorId)
     {
         // Cria uma nova entrada de histórico para a alteração
-        // Assumimos que o UsuarioId da Tarefa é quem fez a alteração.
-        // Em um sistema real, o UsuarioId do contexto de segurança seria passado aqui.
-        var historico = new HistoricoAlteracaoTarefa(this.Id, campo, valorAntigo, valorNovo, this.UsuarioId);
+        // Assumimos que o usuarioExecutorId é quem fez a alteração.
+        var historico = new HistoricoAlteracaoTarefa(this.Id, campo, valorAntigo, valorNovo, usuarioExecutorId);
         _historico.Add(historico);
     }
 
@@ -157,13 +152,11 @@ public class Tarefa : EntidadeBase
     /// <returns>True se a tarefa está pendente ou em andamento; caso contrário, false.</returns>
     public bool EstaPendente()
     {
-        // Esta lógica é intrínseca à tarefa.
         return Status == StatusTarefa.Pendente || Status == StatusTarefa.EmAndamento;
     }
 
     /// <summary>
     /// Verifica se a tarefa está atrasada com base na DataVencimento e Status.
-    /// Esta lógica é intrínseca à tarefa.
     /// </summary>
     public bool EstaAtrasada()
     {

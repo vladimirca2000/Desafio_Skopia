@@ -1,11 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore; // Necessário para DbContext, DbSet, ToListAsync, Where, OrderBy, AsNoTracking
-using Skopia.Data; // Para SkopiaDbContext
 using Skopia.Domain.Entidades; // Necessário para a entidade HistoricoAlteracaoTarefa
 using Skopia.Domain.Repositorios.Interfaces; // Necessário para a interface IRepositorioHistoricoAlteracaoTarefa
-using System;
-using System.Collections.Generic;
-using System.Linq; // Necessário para métodos de extensão LINQ como Where, OrderBy
-using System.Threading.Tasks;
 
 namespace Skopia.Data.Repositorios;
 

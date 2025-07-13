@@ -1,12 +1,11 @@
 ﻿using Skopia.Domain.Excecoes;
-using System;
 
 namespace Skopia.Domain.Entidades;
 
 public class HistoricoAlteracaoTarefa : EntidadeBase
 {
     public Guid TarefaId { get; private set; }
-    public Guid UsuarioId { get; private set; }
+    public Guid UsuarioId { get; private set; } // Agora representa o usuário que fez a modificação
     public string CampoModificado { get; private set; }
     public string? ValorAntigo { get; private set; }
     public string? ValorNovo { get; private set; }
@@ -16,7 +15,6 @@ public class HistoricoAlteracaoTarefa : EntidadeBase
 
     // Construtor protegido para uso do Entity Framework Core.
     protected HistoricoAlteracaoTarefa() : base() { } // Chamada explícita para o construtor padrão da EntidadeBase
-
     // Construtor de domínio para criação de novas entradas de histórico.
     public HistoricoAlteracaoTarefa(Guid tarefaId, string campoModificado, string? valorAntigo, string? valorNovo, Guid usuarioId) : base() // <<-- Chamada explícita para o construtor padrão da EntidadeBase
     {

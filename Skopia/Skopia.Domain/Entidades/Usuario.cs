@@ -1,7 +1,6 @@
 ﻿using Skopia.Domain.Enums;
 using Skopia.Domain.Excecoes;
-using System;
-using System.Text.RegularExpressions; // Necessário para Regex
+using System.Text.RegularExpressions; 
 
 namespace Skopia.Domain.Entidades;
 

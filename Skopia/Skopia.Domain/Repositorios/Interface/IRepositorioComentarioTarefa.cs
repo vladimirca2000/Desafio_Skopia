@@ -1,7 +1,4 @@
 ﻿using Skopia.Domain.Entidades; // Necessário para referenciar a entidade ComentarioTarefa
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Skopia.Domain.Repositorios.Interfaces;
 

@@ -1,6 +1,4 @@
 ﻿using Skopia.Domain.Entidades; // Importa a entidade de domínio 'Usuario'
-using System; // Necessário para Guid
-using System.Threading.Tasks; // Necessário para Task
 
 namespace Skopia.Domain.Repositorios.Interfaces;
 

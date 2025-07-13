@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace Skopia.Domain.Services.Interfaces;
+﻿namespace Skopia.Domain.Servicos.Interfaces;
 
 /// <summary>
 /// Define o contrato para serviços de domínio relacionados a projetos.

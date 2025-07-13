@@ -52,20 +52,19 @@ public class RepositorioUsuario : IRepositorioUsuario
     {
         // Verifica se um usuário com o ID especificado existe e é um gerente.
         // O filtro global de soft delete do DbContext já garante que apenas usuários ativos sejam considerados.
-        // Assumo que a entidade Usuario possui uma propriedade booleana 'IsGerente'.
         // AnyAsync é eficiente porque a consulta será encerrada assim que um usuário que atenda aos critérios for encontrado,
         // sem a necessidade de carregar o objeto completo na memória.
-        return await _dbSet.AnyAsync(u => u.Id == usuarioId && u.Funcao == FuncaoUsuario.Gerente); 
+        return await _dbSet.AnyAsync(u => u.Id == usuarioId && u.Funcao == FuncaoUsuario.Gerente);
     }
 
-    // Se no futuro houver necessidade de métodos de criação, atualização ou exclusão lógica,
-    // eles seriam implementados aqui, seguindo o padrão de não chamar SaveChangesAsync() diretamente.
-    
+    // REMOVIDO: Método CriarAsync, pois o requisito é "Não é necessário nenhum tipo de CRUD para usuários".
+    /*
     public async Task<Usuario> CriarAsync(Usuario usuario)
     {
         await _dbSet.AddAsync(usuario);
         return usuario;
     }
+    */
 
     /*
     public async Task<Usuario> AtualizarAsync(Usuario usuario)

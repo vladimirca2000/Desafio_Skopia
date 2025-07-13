@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Skopia.Data\Skopia.Data.csproj" />
     <ProjectReference Include="..\Skopia.Domain\Skopia.Domain.csproj" />
+    <ProjectReference Include="..\Skopia.Services\Skopia.Services.csproj" />
   </ItemGroup>
 
 </Project>

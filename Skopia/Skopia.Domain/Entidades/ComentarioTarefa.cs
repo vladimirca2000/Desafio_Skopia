@@ -1,5 +1,4 @@
 ﻿using Skopia.Domain.Excecoes;
-using System;
 
 namespace Skopia.Domain.Entidades;
 

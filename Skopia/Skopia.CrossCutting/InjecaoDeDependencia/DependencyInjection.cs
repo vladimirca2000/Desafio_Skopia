@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging; // Embora não usado diretamente no AddInfrastructure, é comum para logging.
@@ -7,7 +8,11 @@ using Skopia.Data.Repositorios; // Namespace para as implementações concretas 
 using Skopia.Data.UnitOfWork; // Namespace para a implementação concreta do UnitOfWork
 using Skopia.Domain.Interfaces.UnitOfWork; // Namespace para a interface do UnitOfWork
 using Skopia.Domain.Repositorios.Interfaces;
-using System;
+using Skopia.Services.Servico;
+using Skopia.Servicos.Interfaces;
+using Skopia.Servicos.Mapeamento;
+using Skopia.Servicos.Servicos;
+using System.Reflection;
 
 namespace Skopia.CrossCutting;
 
@@ -49,6 +54,14 @@ public static class DependencyInjection
         services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();
         services.AddScoped<IRepositorioComentarioTarefa, RepositorioComentarioTarefa>();
         services.AddScoped<IRepositorioHistoricoAlteracaoTarefa, RepositorioHistoricoAlteracaoTarefa>();
+
+        // No método AddInfrastructure:
+        services.AddScoped<IServicoProjeto, ServicoProjeto>(); // Adicionado o novo segmento "Servicos"
+        services.AddScoped<IServicoTarefa, ServicoTarefa>();   // Adicionado o novo segmento "Servicos"
+
+
+        // Adicione esta linha no método AddInfrastructure
+        services.AddAutoMapper(Assembly.GetExecutingAssembly(), typeof(MapeamentoPerfil).Assembly);
 
         // Registro do Unit of Work (Scoped Lifetime)
         // O Unit of Work também é Scoped para garantir que todas as operações dentro de uma requisição

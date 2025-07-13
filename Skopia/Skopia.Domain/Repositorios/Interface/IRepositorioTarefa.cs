@@ -1,7 +1,4 @@
 ﻿using Skopia.Domain.Entidades; // Importa as entidades de domínio 'Tarefa' e 'HistoricoAlteracaoTarefa'
-using System; // Necessário para Guid e DateTime
-using System.Collections.Generic; // Necessário para IEnumerable
-using System.Threading.Tasks; // Necessário para Task
 
 namespace Skopia.Domain.Repositorios.Interfaces;
 

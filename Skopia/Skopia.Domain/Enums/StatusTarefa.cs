@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Skopia.Domain.Enums;
+﻿namespace Skopia.Domain.Enums;
 
 // <summary>
 /// Define os possíveis status que uma tarefa pode ter em seu ciclo de vida.

@@ -1,8 +1,4 @@
-﻿using Skopia.Domain.Enums;
-using Skopia.Domain.Excecoes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Skopia.Domain.Excecoes;
 
 namespace Skopia.Domain.Entidades;
 
@@ -75,7 +71,6 @@ public class Projeto : EntidadeBase // Herda de EntidadeBase, recebendo Id, Esta
     public void AtualizarNome(string novoNome)
     {
         ExcecaoDominio.Quando(string.IsNullOrWhiteSpace(novoNome), "O nome do projeto não pode ser vazio.");
-
         if (Nome != novoNome) // Evita atribuições desnecessárias se o valor não mudou.
         {
             Nome = novoNome;
@@ -104,11 +99,12 @@ public class Projeto : EntidadeBase // Herda de EntidadeBase, recebendo Id, Esta
     public void AdicionarTarefa(Tarefa novaTarefa)
     {
         ExcecaoDominio.Quando(novaTarefa == null, "A tarefa não pode ser nula.");
-        ExcecaoDominio.Quando(novaTarefa?.Id != Id, "A tarefa pertence a outro projeto e não pode ser adicionada aqui.");
+        // CORREÇÃO AQUI: Garante que a tarefa está associada a este projeto
+        ExcecaoDominio.Quando(novaTarefa?.ProjetoId != this.Id, "A tarefa pertence a outro projeto e não pode ser adicionada aqui.");
 
         ExcecaoDominio.Quando(_tarefas.Count >= LIMITE_MAXIMO_TAREFAS,
             $"Limite máximo de {LIMITE_MAXIMO_TAREFAS} tarefas por projeto atingido. Não é possível adicionar mais tarefas.");
-        if(novaTarefa is not null)
+        if (novaTarefa is not null)
             _tarefas.Add(novaTarefa);
     }
 

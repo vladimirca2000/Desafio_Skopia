@@ -1,6 +1,4 @@
 ﻿using Skopia.Domain.Repositorios.Interfaces;
-using System; // Necessário para IDisposable
-using System.Threading.Tasks; // Necessário para Task<int>
 
 namespace Skopia.Domain.Interfaces.UnitOfWork;
 
