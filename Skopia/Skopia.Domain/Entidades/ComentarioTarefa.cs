@@ -9,13 +9,11 @@ public class ComentarioTarefa : EntidadeBase
     public string Conteudo { get; private set; }
     public DateTime DataComentario { get; private set; }
 
-    public Tarefa? Tarefa { get; private set; } // Propriedade de navegação
+    public Tarefa? Tarefa { get; private set; } 
+    protected ComentarioTarefa() : base() { } 
 
-    // Construtor protegido para uso do Entity Framework Core.
-    protected ComentarioTarefa() : base() { } // Chamada explícita para o construtor padrão da EntidadeBase
-
-    // Construtor de domínio para criação de novos comentários.
-    public ComentarioTarefa(Guid tarefaId, Guid usuarioId, string conteudo) : base() // <<-- Chamada explícita para o construtor padrão da EntidadeBase
+    
+    public ComentarioTarefa(Guid tarefaId, Guid usuarioId, string conteudo) : base()
     {
         ExcecaoDominio.Quando(tarefaId == Guid.Empty, "O ID da tarefa não pode ser vazio.");
         ExcecaoDominio.Quando(usuarioId == Guid.Empty, "O ID do usuário não pode ser vazio.");
@@ -27,7 +25,7 @@ public class ComentarioTarefa : EntidadeBase
         DataComentario = DateTime.UtcNow;
     }
 
-    // Método de comportamento do domínio
+    
     public void AtualizarConteudo(string novoConteudo)
     {
         ExcecaoDominio.Quando(string.IsNullOrWhiteSpace(novoConteudo), "O conteúdo do comentário não pode ser vazio.");

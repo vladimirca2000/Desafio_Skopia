@@ -12,7 +12,7 @@ public class TarefaMapeamento : IEntityTypeConfiguration<Tarefa>
         builder.ToTable("Tarefas");
 
         builder.HasKey(t => t.Id);
-        builder.Property(t => t.Id).ValueGeneratedNever(); // Id gerado pelo domínio.
+        builder.Property(t => t.Id).ValueGeneratedNever();
 
         builder.Property(t => t.ProjetoId).IsRequired();
         builder.Property(t => t.UsuarioId).IsRequired();
@@ -23,31 +23,29 @@ public class TarefaMapeamento : IEntityTypeConfiguration<Tarefa>
 
         builder.Property(t => t.Descricao)
             .HasColumnType("TEXT");
-
-        // REMOVIDO: HasDefaultValueSql e ValueGeneratedOnAdd.
-        // DataCriacao é definida pela entidade Tarefa.
+                
         builder.Property(t => t.DataCriacao)
             .IsRequired();
 
         builder.Property(t => t.Status)
             .IsRequired()
-            .HasConversion<int>(); // Armazena o enum como um inteiro no banco de dados.
+            .HasConversion<int>(); 
 
         builder.Property(t => t.Prioridade)
             .IsRequired()
-            .HasConversion<int>(); // Armazena o enum como um inteiro no banco de dados.
+            .HasConversion<int>();
 
         builder.Property(t => t.DataVencimento)
-            .IsRequired(false); // Permite valores nulos.
+            .IsRequired(false); 
 
         builder.HasMany(t => t.Comentarios)
             .WithOne(c => c.Tarefa)
             .HasForeignKey(c => c.TarefaId)
-            .OnDelete(DeleteBehavior.NoAction); // Previne exclusão em cascata.
+            .OnDelete(DeleteBehavior.NoAction); 
 
         builder.HasMany(t => t.Historico)
             .WithOne(h => h.Tarefa)
             .HasForeignKey(h => h.TarefaId)
-            .OnDelete(DeleteBehavior.NoAction); // Previne exclusão em cascata.
+            .OnDelete(DeleteBehavior.NoAction); 
     }
 }

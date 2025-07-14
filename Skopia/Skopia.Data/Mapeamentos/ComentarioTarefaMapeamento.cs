@@ -11,7 +11,7 @@ public class ComentarioTarefaMapeamento : IEntityTypeConfiguration<ComentarioTar
         builder.ToTable("ComentariosTarefas");
 
         builder.HasKey(c => c.Id);
-        builder.Property(c => c.Id).ValueGeneratedNever(); // Id gerado pelo domínio.
+        builder.Property(c => c.Id).ValueGeneratedNever(); 
 
         builder.Property(c => c.TarefaId).IsRequired();
         builder.Property(c => c.UsuarioId).IsRequired();
@@ -19,9 +19,7 @@ public class ComentarioTarefaMapeamento : IEntityTypeConfiguration<ComentarioTar
         builder.Property(c => c.Conteudo)
             .IsRequired()
             .HasColumnType("TEXT");
-
-        // REMOVIDO: HasDefaultValueSql e ValueGeneratedOnAdd.
-        // DataComentario é definida pela entidade ComentarioTarefa.
+                
         builder.Property(c => c.DataComentario)
             .IsRequired();
     }

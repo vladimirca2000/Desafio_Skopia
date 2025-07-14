@@ -7,11 +7,11 @@ namespace Skopia.Services.Modelos;
 /// </summary>
 public class ComentarioTarefaDto
 {
-    public Guid Id { get; set; } // Ajustado para Guid
-    public string Conteudo { get; set; } = string.Empty; // Traduzido
-    public DateTime DataCriacao { get; set; } // Traduzido
-    public Guid TarefaId { get; set; } // Ajustado para Guid, Traduzido
-    public Guid UsuarioId { get; set; } // Ajustado para Guid, Traduzido
+    public Guid Id { get; set; } 
+    public string Conteudo { get; set; } = string.Empty; 
+    public DateTime DataCriacao { get; set; } 
+    public Guid TarefaId { get; set; } 
+    public Guid UsuarioId { get; set; } 
 }
 
 /// <summary>
@@ -19,15 +19,15 @@ public class ComentarioTarefaDto
 /// </summary>
 public class CriarComentarioTarefaDto
 {
-    [Required(ErrorMessage = "O conteúdo do comentário é obrigatório")] // Traduzido
-    [StringLength(1000, ErrorMessage = "O comentário não pode exceder 1000 caracteres")] // Traduzido
-    public string Conteudo { get; set; } = string.Empty; // Traduzido
+    [Required(ErrorMessage = "O conteúdo do comentário é obrigatório")] 
+    [StringLength(1000, ErrorMessage = "O comentário não pode exceder 1000 caracteres")] 
+    public string Conteudo { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "O ID da tarefa é obrigatório")] // Traduzido
-    public Guid TarefaId { get; set; } // Ajustado para Guid
+    [Required(ErrorMessage = "O ID da tarefa é obrigatório")] 
+    public Guid TarefaId { get; set; } 
 
-    [Required(ErrorMessage = "O ID do usuário é obrigatório")] // Traduzido
-    public Guid UsuarioId { get; set; } // Ajustado para Guid
+    [Required(ErrorMessage = "O ID do usuário é obrigatório")] 
+    public Guid UsuarioId { get; set; } 
 }
 
 /// <summary>
@@ -35,13 +35,13 @@ public class CriarComentarioTarefaDto
 /// </summary>
 public class HistoricoTarefaDto
 {
-    public Guid Id { get; set; } // Ajustado para Guid
-    public string CampoModificado { get; set; } = string.Empty; // Traduzido
-    public string? ValorAntigo { get; set; } // Traduzido
-    public string? ValorNovo { get; set; } // Traduzido
-    public DateTime DataAlteracao { get; set; } // Traduzido
-    public Guid TarefaId { get; set; } // Ajustado para Guid, Traduzido
-    public Guid UsuarioId { get; set; } // Ajustado para Guid, Traduzido
+    public Guid Id { get; set; } 
+    public string CampoModificado { get; set; } = string.Empty; 
+    public string? ValorAntigo { get; set; } 
+    public string? ValorNovo { get; set; } 
+    public DateTime DataAlteracao { get; set; } 
+    public Guid TarefaId { get; set; } 
+    public Guid UsuarioId { get; set; } 
 }
 
 /// <summary>
@@ -49,8 +49,8 @@ public class HistoricoTarefaDto
 /// </summary>
 public class RelatorioDesempenhoDto
 {
-    public Guid UsuarioId { get; set; } // Ajustado para Guid, Traduzido
-    public string NomeUsuario { get; set; } = string.Empty; // Traduzido
-    public int ContagemTarefasConcluidas { get; set; } // Traduzido
-    public double MediaTarefasConcluidasPorDia { get; set; } // Traduzido
+    public Guid UsuarioId { get; set; } 
+    public string NomeUsuario { get; set; } = string.Empty; 
+    public int ContagemTarefasConcluidas { get; set; } 
+    public double MediaTarefasConcluidasPorDia { get; set; } 
 }

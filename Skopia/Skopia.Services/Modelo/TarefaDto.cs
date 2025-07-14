@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations; // Necessário para [Required], [StringLength], [RegularExpression]
-
+﻿using System.ComponentModel.DataAnnotations;
 namespace Skopia.Services.Modelos;
 
 /// <summary>
@@ -18,7 +17,7 @@ public class TarefaDto
     public Guid UsuarioId { get; set; } 
     public DateTime? DataConclusao { get; set; } 
 
-    // Referências aos DTOs de Comentário e Histórico, que estarão em outro arquivo.
+    
     public List<ComentarioTarefaDto> Comentarios { get; set; } = new List<ComentarioTarefaDto>(); 
     public List<HistoricoTarefaDto> Historico { get; set; } = new List<HistoricoTarefaDto>(); 
 }
@@ -42,7 +41,7 @@ public class CriarTarefaDto
     public string Prioridade { get; set; } = "Media"; 
 
     [Required(ErrorMessage = "O ID do projeto é obrigatório")] 
-    public Guid ProjetoId { get; set; } //
+    public Guid ProjetoId { get; set; } 
 
     [Required(ErrorMessage = "O ID do usuário é obrigatório")] 
     public Guid UsuarioId { get; set; } 

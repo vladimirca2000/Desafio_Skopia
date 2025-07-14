@@ -1,18 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Skopia.Services.Interfaces;
 using Skopia.Services.Modelos;
+using Microsoft.Extensions.Logging;
 
 namespace Skopia.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")] // A rota será /api/Tarefas
-public class TarefasController : ControllerBase // Nome do controlador traduzido
+[Route("api/[controller]")] 
+public class TarefasController : ControllerBase 
 {
-    private readonly IServicoTarefa _servicoTarefa; // Nome da interface de serviço traduzido
+    private readonly IServicoTarefa _servicoTarefa; 
+    private readonly ILogger<TarefasController> _logger;
 
-    public TarefasController(IServicoTarefa servicoTarefa)
+    public TarefasController(IServicoTarefa servicoTarefa, ILogger<TarefasController> logger)
     {
         _servicoTarefa = servicoTarefa;
+        _logger = logger;
     }
 
     /// <summary>
@@ -20,25 +23,31 @@ public class TarefasController : ControllerBase // Nome do controlador traduzido
     /// </summary>
     /// <param name="projetoId">ID do projeto.</param>
     /// <returns>Lista de tarefas.</returns>
-    [HttpGet("projeto/{projetoId}")] // Rota ajustada para português
+    [HttpGet("projeto/{projetoId}")] 
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)] // Se o projeto não for encontrado pelo serviço
+    [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<IEnumerable<TarefaDto>>> ObterTodosPorProjetoId(Guid projetoId) // Nome do método e tipo ajustados
+    public async Task<ActionResult<IEnumerable<TarefaDto>>> ObterTodosPorProjetoId(Guid projetoId) 
     {
-        if (projetoId == Guid.Empty) // Validação para Guid.Empty
-            return BadRequest("O ID do projeto não pode ser vazio."); // Mensagem traduzida
-
+        _logger.LogInformation("Requisição para obter tarefas do projeto ID: {ProjetoId}", projetoId);
+        if (projetoId == Guid.Empty)
+        {
+            _logger.LogWarning("Tentativa de obter tarefas com ID de projeto vazio.");
+            return BadRequest("O ID do projeto não pode ser vazio.");
+        }
+        
         try
         {
             var tarefas = await _servicoTarefa.ObterTodosPorProjetoIdAsync(projetoId);
+            _logger.LogInformation("Tarefas obtidas com sucesso para o projeto ID: {ProjetoId}. Quantidade: {Count}", projetoId, tarefas.Count());
             return Ok(tarefas);
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(ex.Message); // Mensagem traduzida, ex: "Projeto com ID X não encontrado."
+            _logger.LogWarning(ex, "Projeto com ID {ProjetoId} não encontrado ao tentar obter tarefas.", projetoId);
+            return NotFound(ex.Message); 
         }
     }
 
@@ -53,17 +62,26 @@ public class TarefasController : ControllerBase // Nome do controlador traduzido
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TarefaDto>> ObterPorId(Guid id) // Nome do método e tipo ajustados
+    public async Task<ActionResult<TarefaDto>> ObterPorId(Guid id) 
     {
-        if (id == Guid.Empty) // Validação para Guid.Empty
-            return BadRequest("O ID da tarefa não pode ser vazio."); // Mensagem traduzida
-
-        var tarefa = await _servicoTarefa.ObterPorIdAsync(id);
-        if (tarefa == null) // Verifica se o serviço retornou null (não encontrou)
+        _logger.LogInformation("Requisição para obter tarefa com ID: {Id}", id);
+        if (id == Guid.Empty)
         {
-            return NotFound($"Tarefa com ID {id} não encontrada."); // Mensagem traduzida
+            _logger.LogWarning("Tentativa de obter tarefa com ID vazio.");
+            return BadRequest("O ID da tarefa não pode ser vazio."); 
         }
-        return Ok(tarefa);
+        try
+        {
+            var tarefa = await _servicoTarefa.ObterPorIdAsync(id);
+            _logger.LogInformation("Tarefa obtida com sucesso: {TarefaId}", id);
+            return Ok(tarefa);
+        }
+        catch (Exception)
+        {
+            _logger.LogWarning("Tarefa com ID {Id} não encontrada.", id);
+            return NotFound($"Tarefa com ID {id} não encontrada."); 
+        }
+        
     }
 
     /// <summary>
@@ -74,27 +92,35 @@ public class TarefasController : ControllerBase // Nome do controlador traduzido
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)] // Se o projeto associado não for encontrado
+    [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] // Para KeyNotFoundException
-    public async Task<ActionResult<TarefaDto>> Criar([FromBody] CriarTarefaDto criarTarefaDto) // Nome do método e DTO ajustados
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] 
+    public async Task<ActionResult<TarefaDto>> Criar([FromBody] CriarTarefaDto criarTarefaDto) 
     {
+        _logger.LogInformation("Tentativa de criar nova tarefa: {Titulo} para o projeto ID: {ProjetoId}", criarTarefaDto.Titulo, criarTarefaDto.ProjetoId);
+
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Falha na validação do modelo ao criar tarefa. Erros: {@ModelStateErrors}", ModelState.Values.SelectMany(v => v.Errors));
             return BadRequest(ModelState);
+        }
+            
 
         try
         {
             var tarefaCriada = await _servicoTarefa.CriarAsync(criarTarefaDto);
-            // Retorna 201 Created com a localização do novo recurso
+            _logger.LogInformation("Tarefa '{Titulo}' (ID: {TarefaId}) criada com sucesso para o projeto ID: {ProjetoId}.", tarefaCriada.Titulo, tarefaCriada.Id, tarefaCriada.ProjetoId);
             return CreatedAtAction(nameof(ObterPorId), new { id = tarefaCriada.Id }, tarefaCriada);
         }
-        catch (KeyNotFoundException ex) // Para projeto não encontrado
+        catch (KeyNotFoundException ex)
         {
-            return NotFound(ex.Message); // Mensagem traduzida
+            _logger.LogWarning(ex, "Projeto com ID {ProjetoId} não encontrado ao tentar criar tarefa.", criarTarefaDto.ProjetoId);
+            return NotFound(ex.Message); 
         }
-        catch (InvalidOperationException ex) // Para limite de tarefas por projeto atingido ou outras regras de domínio
+        catch (InvalidOperationException ex) 
         {
-            return BadRequest(new { mensagem = ex.Message }); // Objeto anônimo para JSON
+            _logger.LogWarning(ex, "Regra de negócio violada ao criar tarefa '{Titulo}' para o projeto ID: {ProjetoId}. Mensagem: {Message}", criarTarefaDto.Titulo, criarTarefaDto.ProjetoId, ex.Message);
+            return BadRequest(new { mensagem = ex.Message });
         }
     }
 
@@ -108,29 +134,40 @@ public class TarefasController : ControllerBase // Nome do controlador traduzido
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)] // Para InvalidOperationException
-    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] // Para KeyNotFoundException
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)] // Para ModelState.IsValid
-    public async Task<ActionResult<TarefaDto>> Atualizar(Guid id, [FromBody] AtualizarTarefaDto atualizarTarefaDto) // Nome do método e DTO ajustados
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<TarefaDto>> Atualizar(Guid id, [FromBody] AtualizarTarefaDto atualizarTarefaDto)
     {
-        if (id == Guid.Empty) // Validação para Guid.Empty
-            return BadRequest("O ID da tarefa não pode ser vazio."); // Mensagem traduzida
+        _logger.LogInformation("Tentativa de atualizar tarefa com ID: {Id}", id);
 
+        if (id == Guid.Empty)
+        { 
+            _logger.LogWarning("Tentativa de atualizar tarefa com ID vazio.");
+            return BadRequest("O ID da tarefa não pode ser vazio.");
+        }
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Falha na validação do modelo ao atualizar tarefa. Erros: {@ModelStateErrors}", ModelState.Values.SelectMany(v => v.Errors));
             return BadRequest(ModelState);
+        }
+            
 
         try
         {
             var tarefaAtualizada = await _servicoTarefa.AtualizarAsync(id, atualizarTarefaDto);
+            _logger.LogInformation("Tarefa com ID {Id} atualizada com sucesso.", id);
             return Ok(tarefaAtualizada);
         }
-        catch (KeyNotFoundException ex) // Tarefa não encontrada
+        catch (KeyNotFoundException ex) 
         {
-            return NotFound(ex.Message); // Mensagem traduzida
+            _logger.LogWarning(ex, "Tarefa com ID {Id} não encontrada ao tentar atualizar.", id);
+            return NotFound(ex.Message); 
         }
-        catch (InvalidOperationException ex) // Regras de negócio violadas (ex: status inválido)
+        catch (InvalidOperationException ex) 
         {
-            return BadRequest(new { mensagem = ex.Message }); // Objeto anônimo para JSON
+            _logger.LogWarning(ex, "Regra de negócio violada ao atualizar tarefa com ID {Id}. Mensagem: {Message}", id, ex.Message);
+            return BadRequest(new { mensagem = ex.Message }); 
         }
     }
 
@@ -141,20 +178,30 @@ public class TarefasController : ControllerBase // Nome do controlador traduzido
     /// <returns>Nenhum conteúdo (204 No Content).</returns>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)] // Se o ID for inválido
-    [ProducesResponseType(StatusCodes.Status404NotFound)] // Se a tarefa não for encontrada
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> Excluir(Guid id) // Nome do método e tipo ajustados
+    public async Task<ActionResult> Excluir(Guid id) 
     {
-        if (id == Guid.Empty) // Validação para Guid.Empty
-            return BadRequest("O ID da tarefa não pode ser vazio."); // Mensagem traduzida
+        _logger.LogInformation("Tentativa de excluir tarefa com ID: {Id}", id);
+
+        if (id == Guid.Empty)
+        {
+            _logger.LogWarning("Tentativa de excluir tarefa com ID vazio.");
+            return BadRequest("O ID da tarefa não pode ser vazio."); 
+        }
+            
 
         var resultado = await _servicoTarefa.ExcluirAsync(id);
         if (!resultado)
-            return NotFound($"Tarefa com ID {id} não encontrada."); // Mensagem traduzida
-
-        return NoContent(); // Retorno 204 No Content para exclusão bem-sucedida
+        {
+            _logger.LogWarning("Tarefa com ID {Id} não encontrada para exclusão.", id);
+            return NotFound($"Tarefa com ID {id} não encontrada."); 
+        }
+            
+        _logger.LogInformation("Tarefa com ID {Id} excluída com sucesso (soft delete).", id);
+        return NoContent(); 
     }
 
     /// <summary>
@@ -162,25 +209,33 @@ public class TarefasController : ControllerBase // Nome do controlador traduzido
     /// </summary>
     /// <param name="criarComentarioTarefaDto">Dados do comentário.</param>
     /// <returns>Tarefa com o novo comentário.</returns>
-    [HttpPost("comentarios")] // Rota ajustada para português
+    [HttpPost("comentarios")] 
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)] // Se a tarefa não for encontrada
-    [ProducesResponseType(StatusCodes.Status400BadRequest)] // Para ModelState.IsValid
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<TarefaDto>> AdicionarComentario([FromBody] CriarComentarioTarefaDto criarComentarioTarefaDto) // Nome do método e DTO ajustados
+    public async Task<ActionResult<TarefaDto>> AdicionarComentario([FromBody] CriarComentarioTarefaDto criarComentarioTarefaDto) 
     {
+        _logger.LogInformation("Tentativa de adicionar comentário à tarefa ID: {TarefaId}", criarComentarioTarefaDto.TarefaId);
+
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Falha na validação do modelo ao adicionar comentário. Erros: {@ModelStateErrors}", ModelState.Values.SelectMany(v => v.Errors));
             return BadRequest(ModelState);
+        }
+            
 
         try
         {
             var tarefa = await _servicoTarefa.AdicionarComentarioAsync(criarComentarioTarefaDto);
+            _logger.LogInformation("Comentário adicionado com sucesso à tarefa ID: {TarefaId}", criarComentarioTarefaDto.TarefaId);
             return Ok(tarefa);
         }
-        catch (KeyNotFoundException ex) // Tarefa não encontrada
+        catch (KeyNotFoundException ex) 
         {
-            return NotFound(ex.Message); // Mensagem traduzida
+            _logger.LogWarning(ex, "Tarefa com ID {TarefaId} não encontrada ao tentar adicionar comentário.", criarComentarioTarefaDto.TarefaId);
+            return NotFound(ex.Message); 
         }
     }
 
@@ -189,32 +244,39 @@ public class TarefasController : ControllerBase // Nome do controlador traduzido
     /// </summary>
     /// <param name="usuarioId">ID do usuário.</param>
     /// <returns>Relatório de desempenho.</returns>
-    [HttpGet("desempenho/{usuarioId}")] // Rota ajustada para português
+    [HttpGet("desempenho/{usuarioId}")] 
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)] // ID inválido
-    [ProducesResponseType(StatusCodes.Status404NotFound)] // Usuário não encontrado
-    [ProducesResponseType(StatusCodes.Status403Forbidden)] // Sem permissão (não gerente)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+    [ProducesResponseType(StatusCodes.Status404NotFound)] 
+    [ProducesResponseType(StatusCodes.Status403Forbidden)] 
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<RelatorioDesempenhoDto>> ObterRelatorioDesempenho(Guid usuarioId) // Nome do método e DTO ajustados
+    public async Task<ActionResult<RelatorioDesempenhoDto>> ObterRelatorioDesempenho(Guid usuarioId) 
     {
-        if (usuarioId == Guid.Empty) // Validação para Guid.Empty
-            return BadRequest("O ID do usuário não pode ser vazio."); // Mensagem traduzida
+        _logger.LogInformation("Requisição para obter relatório de desempenho do usuário ID: {UsuarioId}", usuarioId);
+
+        if (usuarioId == Guid.Empty) 
+        { 
+            _logger.LogWarning("Tentativa de obter relatório de desempenho com ID de usuário vazio.");
+            return BadRequest("O ID do usuário não pode ser vazio.");
+        }
 
         try
         {
             var relatorio = await _servicoTarefa.ObterRelatorioDesempenhoUsuarioAsync(usuarioId);
+            _logger.LogInformation("Relatório de desempenho obtido com sucesso para o usuário ID: {UsuarioId}", usuarioId);
             return Ok(relatorio);
         }
-        catch (KeyNotFoundException ex) // Usuário não encontrado
+        catch (KeyNotFoundException ex)
         {
-            return NotFound(ex.Message); // Mensagem traduzida
+            _logger.LogWarning(ex, "Usuário com ID {UsuarioId} não encontrado ao tentar obter relatório de desempenho.", usuarioId);
+            return NotFound(ex.Message);
         }
-        catch (UnauthorizedAccessException ex) // Não é gerente
+        catch (UnauthorizedAccessException ex)
         {
-            // Retorna 403 Forbidden com a mensagem da exceção
-            return StatusCode(StatusCodes.Status403Forbidden, new { mensagem = ex.Message }); // Objeto anônimo para JSON
+            _logger.LogWarning(ex, "Usuário ID: {UsuarioId} tentou acessar relatório de desempenho sem ser gerente.", usuarioId);
+            return StatusCode(StatusCodes.Status403Forbidden, new { mensagem = ex.Message }); 
         }
     }
 }

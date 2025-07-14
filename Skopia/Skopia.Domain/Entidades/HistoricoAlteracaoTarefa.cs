@@ -5,18 +5,18 @@ namespace Skopia.Domain.Entidades;
 public class HistoricoAlteracaoTarefa : EntidadeBase
 {
     public Guid TarefaId { get; private set; }
-    public Guid UsuarioId { get; private set; } // Agora representa o usuário que fez a modificação
+    public Guid UsuarioId { get; private set; } 
     public string CampoModificado { get; private set; }
     public string? ValorAntigo { get; private set; }
     public string? ValorNovo { get; private set; }
     public DateTime DataModificacao { get; private set; }
 
-    public Tarefa? Tarefa { get; private set; } // Propriedade de navegação
+    public Tarefa? Tarefa { get; private set; } 
 
-    // Construtor protegido para uso do Entity Framework Core.
-    protected HistoricoAlteracaoTarefa() : base() { } // Chamada explícita para o construtor padrão da EntidadeBase
-    // Construtor de domínio para criação de novas entradas de histórico.
-    public HistoricoAlteracaoTarefa(Guid tarefaId, string campoModificado, string? valorAntigo, string? valorNovo, Guid usuarioId) : base() // <<-- Chamada explícita para o construtor padrão da EntidadeBase
+    
+    protected HistoricoAlteracaoTarefa() : base() { } 
+
+    public HistoricoAlteracaoTarefa(Guid tarefaId, string campoModificado, string? valorAntigo, string? valorNovo, Guid usuarioId) : base() 
     {
         ExcecaoDominio.Quando(tarefaId == Guid.Empty, "O ID da tarefa não pode ser vazio para o histórico.");
         ExcecaoDominio.Quando(string.IsNullOrWhiteSpace(campoModificado), "O campo modificado não pode ser vazio.");
@@ -27,6 +27,6 @@ public class HistoricoAlteracaoTarefa : EntidadeBase
         ValorAntigo = valorAntigo;
         ValorNovo = valorNovo;
         DataModificacao = DateTime.UtcNow;
-        UsuarioId = usuarioId; // Este é o usuário que realizou a alteração.
+        UsuarioId = usuarioId; 
     }
 }

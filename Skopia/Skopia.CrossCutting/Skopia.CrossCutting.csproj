@@ -7,9 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.18" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+	<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
+	<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
+	<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.0" />
   </ItemGroup>
 
@@ -18,5 +22,4 @@
     <ProjectReference Include="..\Skopia.Domain\Skopia.Domain.csproj" />
     <ProjectReference Include="..\Skopia.Services\Skopia.Services.csproj" />
   </ItemGroup>
-
 </Project>

@@ -2,8 +2,7 @@
 using Skopia.Domain.Entidades;
 using Skopia.Domain.Enums;
 using System.Linq.Expressions;
-using System.Reflection; // Certifique-se de ter esta referência
-// ... outras usings ...
+using System.Reflection; 
 
 namespace Skopia.Data;
 
@@ -19,13 +18,10 @@ public class SkopiaDbContext : DbContext
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            // Verifica se o tipo de entidade herda de EntidadeBase
-            // Isso garante que o filtro de soft delete seja aplicado apenas a entidades que possuem a propriedade 'EstaDeletado'.
+            
             if (typeof(EntidadeBase).IsAssignableFrom(entityType.ClrType))
             {
-                // Chamar o método auxiliar para construir o filtro.
-                // Isso garante que a expressão seja construída de forma que o EF Core possa traduzir
-                // para SQL de maneira eficiente, sem problemas com casts implícitos ou explícitos.
+                
                 modelBuilder.Entity(entityType.ClrType)
                     .HasQueryFilter(GetSoftDeleteFilter(entityType.ClrType));
             }
@@ -34,32 +30,19 @@ public class SkopiaDbContext : DbContext
         SeedData(modelBuilder);
     }
 
-    // NOVO MÉTODO AUXILIAR PARA O HASQUERYFILTER
-    /// <summary>
-    /// Constrói dinamicamente a expressão de filtro para soft delete para o tipo de entidade fornecido.
-    /// Isso é necessário para lidar corretamente com a herança e a tradução do EF Core para o filtro global.
-    /// </summary>
-    /// <param name="entityType">O tipo CLR da entidade (por exemplo, typeof(Projeto), typeof(Tarefa)).</param>
-    /// <returns>Uma LambdaExpression que representa o filtro de consulta para 'EstaDeletado = false'.</returns>
+    
     private static LambdaExpression GetSoftDeleteFilter(Type entityType)
     {
-        // 1. Define o parâmetro da expressão lambda (ex: 'e' em 'e => ...')
-        // O tipo do parâmetro é o tipo da entidade que estamos configurando (ex: Projeto, Tarefa).
-        // Isso é crucial porque o EF Core precisa saber o tipo exato para a tradução SQL.
+        
         var parameter = Expression.Parameter(entityType, "e");
 
-        // 2. Acessa a propriedade 'EstaDeletado'.
-        // Como 'EstaDeletado' está em EntidadeBase, e 'entityType' é sempre derivado de EntidadeBase,
-        // podemos acessar a propriedade diretamente. O EF Core consegue mapear isso para a coluna correta.
+        
         var property = Expression.Property(parameter, "EstaDeletado");
 
-        // 3. Nega a expressão da propriedade (e.g., !e.EstaDeletado).
-        // Isso cria a condição 'EstaDeletado == false'.
+        
         var notProperty = Expression.Not(property);
 
-        // 4. Cria a expressão lambda completa (e => !e.EstaDeletado).
-        // A LambdaExpression é retornada para ser usada no HasQueryFilter.
-        // Esta é a forma que o EF Core consegue traduzir de forma otimizada para SQL.
+        
         return Expression.Lambda(notProperty, parameter);
     }
 
@@ -69,11 +52,11 @@ public class SkopiaDbContext : DbContext
         {
             if (entry.Entity is EntidadeBase entidadeBase)
             {
-                // Lógica de Soft Delete: Intercepta a exclusão e marca a entidade como deletada.
+               
                 if (entry.State == EntityState.Deleted)
                 {
-                    entry.State = EntityState.Modified; // Muda o estado para Modified
-                    entidadeBase.Deletar(); // Chama o método para setar EstaDeletado e QuandoDeletou
+                    entry.State = EntityState.Modified;
+                    entidadeBase.Deletar();
                 }
             }
         }
@@ -82,24 +65,23 @@ public class SkopiaDbContext : DbContext
 
     private void SeedData(ModelBuilder modelBuilder)
     {
-        // Definição de IDs determinísticos para o seeding, garantindo idempotência.
+        
         Guid usuarioIdRegular = Guid.Parse("A0000000-0000-0000-0000-000000000001");
         Guid usuarioIdGerente = Guid.Parse("A0000000-0000-0000-0000-000000000002");
         Guid projetoIdExemplo = Guid.Parse("B0000000-0000-0000-0000-000000000001");
         Guid tarefaIdExemplo = Guid.Parse("C0000000-0000-0000-0000-000000000001");
         Guid comentarioIdExemplo = Guid.Parse("D0000000-0000-0000-0000-000000000001");
 
-        // Data de seed consistente e em UTC para evitar problemas de fuso horário.
+        
         var dataSeed = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
-        // Seeding para Usuario: Construtores podem ser usados se os IDs forem passados explicitamente.
+        
         modelBuilder.Entity<Usuario>().HasData(
             new Usuario(usuarioIdRegular, "Usuário Comum", "usuario@exemplo.com", FuncaoUsuario.Regular),
             new Usuario(usuarioIdGerente, "Usuário Gerente", "gerente@exemplo.com", FuncaoUsuario.Gerente)
         );
 
-        // CORREÇÃO: Uso de tipo anônimo para o HasData de Projeto para garantir Id determinístico
-        // e preencher explicitamente todas as propriedades, incluindo as da EntidadeBase.
+        
         modelBuilder.Entity<Projeto>().HasData(
             new
             {
@@ -113,7 +95,7 @@ public class SkopiaDbContext : DbContext
             }
         );
 
-        // Seeding para Tarefa, também usando tipo anônimo para consistência e idempotência.
+       
         modelBuilder.Entity<Tarefa>().HasData(
             new
             {
@@ -125,13 +107,13 @@ public class SkopiaDbContext : DbContext
                 DataCriacao = dataSeed,
                 Status = StatusTarefa.Pendente,
                 Prioridade = PrioridadeTarefa.Media,
-                DataVencimento = (DateTime?)null, // Propriedade anulável
+                DataVencimento = (DateTime?)null, 
                 EstaDeletado = false,
                 QuandoDeletou = (DateTime?)null
             }
         );
 
-        // Seeding para ComentarioTarefa, seguindo o mesmo padrão.
+       
         modelBuilder.Entity<ComentarioTarefa>().HasData(
             new
             {

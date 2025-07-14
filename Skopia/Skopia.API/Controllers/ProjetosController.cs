@@ -1,18 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Skopia.Services.Interfaces;
 using Skopia.Services.Modelos;
+using Microsoft.Extensions.Logging;
 
 namespace Skopia.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")] // A rota será /api/Projetos
-public class ProjetosController : ControllerBase // Nome do controlador traduzido
+[Route("api/[controller]")] 
+public class ProjetosController : ControllerBase 
 {
-    private readonly IServicoProjeto _servicoProjeto; // Nome da interface de serviço traduzido
+    private readonly IServicoProjeto _servicoProjeto;
+    private readonly ILogger<ProjetosController> _logger;
 
-    public ProjetosController(IServicoProjeto servicoProjeto)
+    public ProjetosController(IServicoProjeto servicoProjeto, ILogger<ProjetosController> logger)
     {
         _servicoProjeto = servicoProjeto;
+        _logger = logger;
     }
 
     /// <summary>
@@ -20,17 +23,33 @@ public class ProjetosController : ControllerBase // Nome do controlador traduzid
     /// </summary>
     /// <param name="usuarioId">ID do usuário.</param>
     /// <returns>Lista de projetos.</returns>
-    [HttpGet("usuario/{usuarioId}")] // Rota ajustada para português
+    [HttpGet("usuario/{usuarioId}")] 
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)] // Adicionado tipo para mensagem de erro
-    public async Task<ActionResult<IEnumerable<ProjetoDto>>> ObterTodosPorUsuarioId(Guid usuarioId) // Nome do método e tipo ajustados
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)] 
+    public async Task<ActionResult<IEnumerable<ProjetoDto>>> ObterTodosPorUsuarioId(Guid usuarioId) 
     {
-        if (usuarioId == Guid.Empty) // Validação para Guid.Empty
-            return BadRequest("O ID do usuário não pode ser vazio."); // Mensagem traduzida
+        _logger.LogInformation("Obtendo todos os projetos para o usuário ID: {UsuarioId}", usuarioId);
 
-        var projetos = await _servicoProjeto.ObterTodosPorUsuarioIdAsync(usuarioId);
-        return Ok(projetos);
+        if (usuarioId == Guid.Empty)
+        {
+            _logger.LogWarning("ID do usuário vazio ao tentar obter projetos.");
+            return BadRequest("O ID do usuário não pode ser vazio.");
+        }
+
+        try
+        {
+            var projetos = await _servicoProjeto.ObterTodosPorUsuarioIdAsync(usuarioId);
+            _logger.LogInformation("Projetos obtidos com sucesso para o usuário ID: {UsuarioId}. Total de projetos: {TotalProjetos}", usuarioId, projetos.Count());
+            return Ok(projetos);
+        }
+        catch (Exception)
+        {
+            _logger.LogError("Erro ao obter projetos para o usuário ID: {UsuarioId}", usuarioId);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um erro interno.");
+        }
+
+        
     }
 
     /// <summary>
@@ -42,25 +61,33 @@ public class ProjetosController : ControllerBase // Nome do controlador traduzid
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)] // Adicionado tipo para mensagem de erro
-    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] // Adicionado tipo para mensagem de erro
-    public async Task<ActionResult<ProjetoDto>> ObterPorId(Guid id) // Nome do método e tipo ajustados
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProjetoDto>> ObterPorId(Guid id)
     {
-        if (id == Guid.Empty) // Validação para Guid.Empty
+        _logger.LogInformation("Obtendo projeto com ID: {Id}", id);
+
+        if (id == Guid.Empty)
+        { 
+            _logger.LogWarning("ID do projeto vazio ao tentar obter projeto.");
             return BadRequest("O ID do projeto não pode ser vazio."); // Mensagem traduzida
+        }
 
         try
         {
             var projeto = await _servicoProjeto.ObterPorIdAsync(id);
-            if (projeto == null) // Verificação se o serviço retornou null (não encontrou)
+            if (projeto == null) 
             {
+                _logger.LogWarning("Projeto com ID {Id} não encontrado.", id);
                 return NotFound($"Projeto com ID {id} não encontrado."); // Mensagem traduzida
             }
+            _logger.LogInformation("Projeto com ID {Id} obtido com sucesso.", id);
             return Ok(projeto);
         }
         catch (KeyNotFoundException ex) // Captura exceções de "não encontrado" que vêm do serviço
         {
-            return NotFound(ex.Message); // Mensagem traduzida
+            _logger.LogWarning("Projeto com ID {Id} não encontrado: {Message}", id, ex.Message);
+            return NotFound(ex.Message); 
         }
     }
 
@@ -72,16 +99,28 @@ public class ProjetosController : ControllerBase // Nome do controlador traduzid
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)] // Tipo para erros de validação
-    public async Task<ActionResult<ProjetoDto>> Criar([FromBody] CriarProjetoDto criarProjetoDto) // Nome do método e DTO ajustados
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)] 
+    public async Task<ActionResult<ProjetoDto>> Criar([FromBody] CriarProjetoDto criarProjetoDto) 
     {
-        // O ModelState.IsValid já lida com as validações de DataAnnotations do DTO
+        _logger.LogInformation("Criando novo projeto com dados: {@CriarProjetoDto}", criarProjetoDto);
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Dados inválidos para criação de projeto: {@ModelState}", ModelState);
             return BadRequest(ModelState);
+        }
 
-        var projetoCriado = await _servicoProjeto.CriarAsync(criarProjetoDto);
-        // Retorna 201 Created com a localização do novo recurso
-        return CreatedAtAction(nameof(ObterPorId), new { id = projetoCriado.Id }, projetoCriado);
+        try
+        {
+            var projetoCriado = await _servicoProjeto.CriarAsync(criarProjetoDto);
+            _logger.LogInformation("Projeto criado com sucesso: {Id}", projetoCriado.Id);
+            return CreatedAtAction(nameof(ObterPorId), new { id = projetoCriado.Id }, projetoCriado);
+        }
+        catch (Exception)
+        {
+            _logger.LogError("Erro ao criar projeto com dados: {@CriarProjetoDto}", criarProjetoDto);   
+            return BadRequest(ModelState);
+        }
+        
     }
 
     /// <summary>
@@ -94,24 +133,35 @@ public class ProjetosController : ControllerBase // Nome do controlador traduzid
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)] // Adicionado tipo para mensagem de erro
-    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] // Adicionado tipo para mensagem de erro
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)] // Tipo para erros de validação
-    public async Task<ActionResult<ProjetoDto>> Atualizar(Guid id, [FromBody] AtualizarProjetoDto atualizarProjetoDto) // Nome do método e DTO ajustados
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)] 
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] 
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)] 
+    public async Task<ActionResult<ProjetoDto>> Atualizar(Guid id, [FromBody] AtualizarProjetoDto atualizarProjetoDto) 
     {
-        if (id == Guid.Empty) // Validação para Guid.Empty
-            return BadRequest("O ID do projeto não pode ser vazio."); // Mensagem traduzida
+        _logger.LogInformation("Atualizando projeto com ID: {Id} e dados: {@AtualizarProjetoDto}", id, atualizarProjetoDto);
+        if (id == Guid.Empty)
+        {
+            _logger.LogWarning("ID do projeto vazio ao tentar atualizar projeto.");
+            return BadRequest("O ID do projeto não pode ser vazio.");
+        }
+            
 
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Dados inválidos para atualização de projeto: {@ModelState}", ModelState);
             return BadRequest(ModelState);
+        }
+            
 
         try
         {
             var projetoAtualizado = await _servicoProjeto.AtualizarAsync(id, atualizarProjetoDto);
+            _logger.LogInformation("Projeto com ID {Id} atualizado com sucesso.", id);
             return Ok(projetoAtualizado);
         }
         catch (KeyNotFoundException ex)
         {
+            _logger.LogWarning("Projeto com ID {Id} não encontrado para atualização: {Message}", id, ex.Message);
             return NotFound(ex.Message); // Mensagem traduzida
         }
     }
@@ -125,25 +175,36 @@ public class ProjetosController : ControllerBase // Nome do controlador traduzid
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)] // Adicionado tipo para mensagem de erro
-    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] // Adicionado tipo para mensagem de erro
-    public async Task<ActionResult> Excluir(Guid id) // Nome do método e tipo ajustados
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)] 
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] 
+    public async Task<ActionResult> Excluir(Guid id) 
     {
-        if (id == Guid.Empty) // Validação para Guid.Empty
-            return BadRequest("O ID do projeto não pode ser vazio."); // Mensagem traduzida
+        _logger.LogInformation("Excluindo projeto com ID: {Id}", id);
+
+        if (id == Guid.Empty)
+        {
+            _logger.LogWarning("ID do projeto vazio ao tentar excluir projeto.");
+            return BadRequest("O ID do projeto não pode ser vazio.");
+        }
+             
 
         try
         {
             var resultado = await _servicoProjeto.ExcluirAsync(id);
+           
             if (!resultado)
-                return NotFound($"Projeto com ID {id} não encontrado."); // Mensagem traduzida
-
-            return NoContent(); // Retorno 204 No Content para exclusão bem-sucedida
+            {
+                _logger.LogWarning("Projeto com ID {Id} não encontrado para exclusão.", id);
+                return NotFound($"Projeto com ID {id} não encontrado."); 
+            }
+                
+            _logger.LogInformation("Projeto com ID {Id} excluído com sucesso.", id);
+            return NoContent(); 
         }
-        catch (InvalidOperationException ex) // Captura exceções de regras de negócio (ex: projeto com tarefas pendentes)
+        catch (InvalidOperationException ex) 
         {
-            // Retorna BadRequest com a mensagem da exceção para o cliente
-            return BadRequest(new { mensagem = ex.Message }); // Objeto anônimo para JSON
+            _logger.LogError("Erro ao excluir projeto com ID {Id}: {Message}", id, ex.Message);
+            return BadRequest(new { mensagem = ex.Message }); 
         }
     }
 }

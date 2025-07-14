@@ -11,8 +11,7 @@ public class ProjetoMapeamento : IEntityTypeConfiguration<Projeto>
         builder.ToTable("Projetos");
 
         builder.HasKey(p => p.Id);
-        // O Id é gerado pelo domínio (Guid.NewGuid() no construtor de EntidadeBase),
-        // então o banco de dados não deve gerar seu valor.
+
         builder.Property(p => p.Id).ValueGeneratedNever();
 
         builder.Property(p => p.Nome)
@@ -20,11 +19,9 @@ public class ProjetoMapeamento : IEntityTypeConfiguration<Projeto>
             .HasMaxLength(100);
 
         builder.Property(p => p.Descricao)
-            .HasColumnType("TEXT"); // Mapeia para um tipo de texto longo no banco de dados.
+            .HasColumnType("TEXT"); 
 
-        // REMOVIDO: HasDefaultValueSql e ValueGeneratedOnAdd.
-        // A propriedade DataCriacao é definida pelo domínio (no construtor da entidade)
-        // e é persistida como está. Não é gerada pelo banco de dados.
+       
         builder.Property(p => p.DataCriacao)
             .IsRequired();
 
@@ -33,9 +30,8 @@ public class ProjetoMapeamento : IEntityTypeConfiguration<Projeto>
 
         builder.HasMany(p => p.Tarefas)
             .WithOne(t => t.Projeto)
-            .HasForeignKey(t => t.ProjetoId)
-            // DeleteBehavior.NoAction: Previne a exclusão em cascata de tarefas quando um projeto é excluído.
-            // Isso é crucial para soft delete ou para um controle mais granular da remoção de dados.
+            .HasForeignKey(t => t.ProjetoId)            
+
             .OnDelete(DeleteBehavior.NoAction);
     }
 }

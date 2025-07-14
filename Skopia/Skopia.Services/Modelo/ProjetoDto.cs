@@ -7,12 +7,12 @@ namespace Skopia.Services.Modelos;
 /// </summary>
 public class ProjetoDto
 {
-    public Guid Id { get; set; } // Ajustado para Guid
-    public string Nome { get; set; } = string.Empty; // Traduzido
-    public string? Descricao { get; set; } // Traduzido
-    public DateTime DataCriacao { get; set; } // Traduzido
-    public Guid UsuarioId { get; set; } // Ajustado para Guid, Traduzido
-    public int ContagemTarefas { get; set; } // Traduzido
+    public Guid Id { get; set; } 
+    public string Nome { get; set; } = string.Empty; 
+    public string? Descricao { get; set; } 
+    public DateTime DataCriacao { get; set; } 
+    public Guid UsuarioId { get; set; } 
+    public int ContagemTarefas { get; set; } 
 }
 
 /// <summary>
@@ -20,15 +20,15 @@ public class ProjetoDto
 /// </summary>
 public class CriarProjetoDto
 {
-    [Required(ErrorMessage = "O nome do projeto é obrigatório")] // Traduzido
-    [StringLength(100, ErrorMessage = "O nome não pode exceder 100 caracteres")] // Traduzido
-    public string Nome { get; set; } = string.Empty; // Traduzido
+    [Required(ErrorMessage = "O nome do projeto é obrigatório")] 
+    [StringLength(100, ErrorMessage = "O nome não pode exceder 100 caracteres")] 
+    public string Nome { get; set; } = string.Empty; 
 
-    [StringLength(500, ErrorMessage = "A descrição não pode exceder 500 caracteres")] // Traduzido
-    public string? Descricao { get; set; } // Traduzido
+    [StringLength(500, ErrorMessage = "A descrição não pode exceder 500 caracteres")] 
+    public string? Descricao { get; set; } 
 
-    [Required(ErrorMessage = "O ID do usuário é obrigatório")] // Traduzido
-    public Guid UsuarioId { get; set; } // Ajustado para Guid
+    [Required(ErrorMessage = "O ID do usuário é obrigatório")] 
+    public Guid UsuarioId { get; set; } 
 }
 
 /// <summary>
@@ -36,10 +36,10 @@ public class CriarProjetoDto
 /// </summary>
 public class AtualizarProjetoDto
 {
-    [Required(ErrorMessage = "O nome do projeto é obrigatório")] // Traduzido
-    [StringLength(100, ErrorMessage = "O nome não pode exceder 100 caracteres")] // Traduzido
-    public string Nome { get; set; } = string.Empty; // Traduzido
+    [Required(ErrorMessage = "O nome do projeto é obrigatório")] 
+    [StringLength(100, ErrorMessage = "O nome não pode exceder 100 caracteres")] 
+    public string Nome { get; set; } = string.Empty; 
 
-    [StringLength(500, ErrorMessage = "A descrição não pode exceder 500 caracteres")] // Traduzido
-    public string? Descricao { get; set; } // Traduzido
+    [StringLength(500, ErrorMessage = "A descrição não pode exceder 500 caracteres")] 
+    public string? Descricao { get; set; } 
 }

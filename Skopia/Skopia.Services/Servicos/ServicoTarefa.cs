@@ -1,88 +1,88 @@
 ﻿using AutoMapper;
-using Skopia.Domain.Entidades; // Entidades do domínio
-using Skopia.Domain.Enums; // Enums do domínio (StatusTarefa, PrioridadeTarefa)
-using Skopia.Domain.Excecoes; // Exceções de domínio
-using Skopia.Domain.Interfaces.UnitOfWork; // Interface da Unit of Work
+using Microsoft.Extensions.Logging;
+using Skopia.Domain.Entidades; 
+using Skopia.Domain.Enums; 
+using Skopia.Domain.Excecoes; 
+using Skopia.Domain.Interfaces.UnitOfWork; 
 using Skopia.Services.Interfaces;
-using Skopia.Services.Modelos; // DTOs da aplicação
+using Skopia.Services.Modelos; 
 
-namespace Skopia.Services.Servicos; 
+namespace Skopia.Services.Servicos;
 
-/// <summary>
-/// Implementação do serviço de aplicação para gerenciamento de tarefas.
-/// Orquestra operações entre DTOs, entidades de domínio, repositórios (via Unit of Work)
-/// e validações de regras de negócio.
-/// </summary>
 public class ServicoTarefa : IServicoTarefa
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ILogger<ServicoTarefa> _logger;
 
-    /// <summary>
-    /// Construtor do serviço de tarefa.
-    /// </summary>
-    /// <param name="unitOfWork">Instância da Unit of Work para gerenciar o acesso aos dados.</param>
-    /// <param name="mapper">Instância do AutoMapper para mapeamento entre DTOs e entidades.</param>
-    public ServicoTarefa(IUnitOfWork unitOfWork, IMapper mapper)
+    /// <inheritdoc/>
+    public ServicoTarefa(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ServicoTarefa> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    /// <summary>
-    /// Obtém todas as tarefas de um projeto específico.
-    /// </summary>
-    /// <param name="projetoId">ID do projeto.</param>
-    /// <returns>Coleção de DTOs de tarefas.</returns>
+    /// <inheritdoc/>
     public async Task<IEnumerable<TarefaDto>> ObterTodosPorProjetoIdAsync(Guid projetoId)
     {
-        // O repositório de projeto pode obter o projeto com suas tarefas incluídas
+        _logger.LogInformation("Obtendo todas as tarefas para o projeto ID: {ProjetoId}", projetoId);
+
+        if (projetoId == Guid.Empty)
+        {
+            _logger.LogWarning("ID do projeto vazio ao tentar obter tarefas.");
+            throw new ArgumentException("O ID do projeto não pode ser vazio.", nameof(projetoId));
+        }
+
         var projeto = await _unitOfWork.Projetos.ObterPorIdAsync(projetoId);
         if (projeto == null)
         {
+            _logger.LogWarning("Projeto com ID {ProjetoId} não encontrado ao tentar obter tarefas.", projetoId);
             throw new KeyNotFoundException($"Projeto com ID {projetoId} não encontrado.");
         }
-        // Mapeia a coleção de tarefas do projeto para uma coleção de TarefaDto
+        
+        _logger.LogInformation("Projeto com ID {ProjetoId} encontrado. Obtendo tarefas associadas.", projetoId);
         return _mapper.Map<IEnumerable<TarefaDto>>(projeto.Tarefas);
-        // Alternativamente, se o repositorioTarefa.ObterTodosPorProjetoIdAsync fosse mais performático:
-        // var tarefas = await _unitOfWork.Tarefas.ObterTodosPorProjetoIdAsync(projetoId);
-        // return _mapper.Map<IEnumerable<TarefaDto>>(tarefas);
     }
 
-    /// <summary>
-    /// Obtém uma tarefa pelo seu ID.
-    /// </summary>
-    /// <param name="id">ID da tarefa.</param>
-    /// <returns>DTO da tarefa.</returns>
-    /// <exception cref="KeyNotFoundException">Lançada se a tarefa não for encontrada.</exception>
+    /// <inheritdoc/>
     public async Task<TarefaDto?> ObterPorIdAsync(Guid id)
     {
+        _logger.LogInformation("Obtendo tarefa com ID: {Id}", id);
+
+        if (id == Guid.Empty) 
+        {
+            _logger.LogWarning("ID da tarefa vazio ao tentar obter tarefa.");
+            throw new ArgumentException("O ID da tarefa não pode ser vazio.", nameof(id));
+        }
         var tarefa = await _unitOfWork.Tarefas.ObterPorIdAsync(id);
         if (tarefa == null)
         {
-            // Deixamos a camada de aplicação decidir como lidar com a ausência do recurso
+            _logger.LogWarning("Tarefa com ID {Id} não encontrada.", id);
             return null;
         }
+
+        _logger.LogInformation("Tarefa com ID {Id} encontrada.", id);
         return _mapper.Map<TarefaDto>(tarefa);
     }
 
-    /// <summary>
-    /// Cria uma nova tarefa.
-    /// </summary>
-    /// <param name="criarTarefaDto">DTO com os dados para criação da tarefa.</param>
-    /// <returns>DTO da tarefa criada.</returns>
-    /// <exception cref="KeyNotFoundException">Lançada se o projeto não for encontrado.</exception>
-    /// <exception cref="ExcecaoDominio">Lançada se o limite de tarefas por projeto for atingido.</exception>
+    /// <inheritdoc/>
     public async Task<TarefaDto> CriarAsync(CriarTarefaDto criarTarefaDto)
     {
+        _logger.LogInformation("Criando nova tarefa com dados: {@CriarTarefaDto}", criarTarefaDto);
+
         // 1. Verificar se o projeto existe
-        // Obtém o projeto com suas tarefas para que a regra de limite seja aplicada
         var projeto = await _unitOfWork.Projetos.ObterPorIdAsync(criarTarefaDto.ProjetoId);
         if (projeto == null)
+        {
+            _logger.LogWarning("Projeto com ID {ProjetoId} não encontrado ao tentar criar tarefa.", criarTarefaDto.ProjetoId);
             throw new KeyNotFoundException($"Projeto com ID {criarTarefaDto.ProjetoId} não encontrado.");
+        }
+            
 
         // 2. Converter string de prioridade para o enum do domínio
         var prioridade = ParsePrioridade(criarTarefaDto.Prioridade);
+        _logger.LogInformation("Prioridade convertida para enum: {Prioridade}", prioridade);
 
         // 3. Criar a entidade de domínio Tarefa (o construtor já define o status inicial e DataCriacao)
         var novaTarefa = new Tarefa(
@@ -93,67 +93,55 @@ public class ServicoTarefa : IServicoTarefa
             prioridade,
             criarTarefaDto.DataVencimento
         );
+        _logger.LogInformation("Nova tarefa criada: {@NovaTarefa}", novaTarefa);
 
-        // 4. Adicionar a tarefa ao projeto para aplicar a regra de limite (e outras, se houver)
-        // A exceção ExcecaoDominio.LimiteTarefasExcedido será lançada se o limite for atingido.
-        // Para que o AdicionarTarefa da entidade Projeto funcione, a coleção de Tarefas do Projeto
-        // precisa ser carregada. O ObterPorIdAsync em IRepositorioProjeto.ObterPorIdAsync(Guid id)
-        // já deve fazer isso (vide `Include(p => p.Tarefas)` no RepositorioProjeto).
-        try
-        {
-            // A linha abaixo seria para que a ENTIDADE Projeto valide se o limite de 20 tarefas foi atingido.
-            // Mas, a persistência da tarefa é feita diretamente no repositório de tarefas.
-            // O limite real de tarefas por projeto é validado no método ObterContagemTarefasAsync no RepositorioProjeto
-            // e o ServicoProjeto verifica isso antes de criar a tarefa.
-            // Se a entidade Projeto tivesse um método para "validar adição de tarefa" sem realmente adicioná-la à coleção,
-            // seria o lugar ideal para a regra. Como está, a regra do limite é verificada via RepositorioProjeto.
-            // Aqui, o 'projeto.AdicionarTarefa(novaTarefa);' apenas validaria a coleção em memória, não a do banco.
-        }
-        catch (ExcecaoDominio ex)
-        {
-            // Captura exceções específicas do domínio e as relança para a camada superior.
-            throw new InvalidOperationException(ex.Message, ex);
-        }
-
-        // 5. Persistir a nova tarefa (o histórico inicial é registrado no construtor da Tarefa)
+        // 4. Persistir a nova tarefa (o histórico inicial é registrado no construtor da Tarefa)
         await _unitOfWork.Tarefas.CriarAsync(novaTarefa);
+        _logger.LogInformation("Nova tarefa persistida no repositório com ID: {Id}", novaTarefa.Id);
 
-        // 6. Commitar a transação
+        // 5. Commitar a transação
         await _unitOfWork.CommitAsync();
+        _logger.LogInformation("Commit realizado após criação da nova tarefa.");
 
+        // 6. Retornar o DTO da nova tarefa criada
+        _logger.LogInformation("Tarefa criada com sucesso. Retornando DTO.");
         return _mapper.Map<TarefaDto>(novaTarefa);
     }
 
-    /// <summary>
-    /// Atualiza uma tarefa existente.
-    /// </summary>
-    /// <param name="id">ID da tarefa a ser atualizada.</param>
-    /// <param name="atualizarTarefaDto">DTO com os dados para atualização.</param>
-    /// <returns>DTO da tarefa atualizada.</returns>
-    /// <exception cref="KeyNotFoundException">Lançada se a tarefa não for encontrada.</exception>
-    /// <exception cref="InvalidOperationException">Lançada se alguma regra de negócio de atualização for violada.</exception>
+    /// <inheritdoc/>
     public async Task<TarefaDto> AtualizarAsync(Guid id, AtualizarTarefaDto atualizarTarefaDto)
     {
+        _logger.LogInformation("Atualizando tarefa com ID: {Id} e dados: {@AtualizarTarefaDto}", id, atualizarTarefaDto);
+        if (id == Guid.Empty)
+        {
+            _logger.LogWarning("ID da tarefa vazio ao tentar atualizar tarefa.");
+            throw new ArgumentException("O ID da tarefa não pode ser vazio.", nameof(id));
+        }
+
         var tarefaExistente = await _unitOfWork.Tarefas.ObterPorIdAsync(id);
         if (tarefaExistente == null)
+        {
+            _logger.LogWarning("Tarefa com ID {Id} não encontrada ao tentar atualizar.", id);
             throw new KeyNotFoundException($"Tarefa com ID {id} não encontrada.");
+        }
 
-        // Chamar os métodos de comportamento da entidade de domínio para aplicar as atualizações.
-        // A entidade Tarefa é responsável por registrar seu próprio histórico de alterações.
+        _logger.LogInformation("Tarefa com ID {Id} encontrada. Verificando alterações.", id);
         if (tarefaExistente.Titulo != atualizarTarefaDto.Titulo)
         {
-            tarefaExistente.AtualizarTitulo(atualizarTarefaDto.Titulo, atualizarTarefaDto.UsuarioExecutorId); // Passando usuarioExecutorId
+            tarefaExistente.AtualizarTitulo(atualizarTarefaDto.Titulo, atualizarTarefaDto.UsuarioExecutorId); 
         }
+        _logger.LogInformation("Título da tarefa atualizado para: {Titulo}", atualizarTarefaDto.Titulo);
         if (tarefaExistente.Descricao != atualizarTarefaDto.Descricao)
         {
-            tarefaExistente.AtualizarDescricao(atualizarTarefaDto.Descricao, atualizarTarefaDto.UsuarioExecutorId); // Passando usuarioExecutorId
+            tarefaExistente.AtualizarDescricao(atualizarTarefaDto.Descricao, atualizarTarefaDto.UsuarioExecutorId); 
         }
+        _logger.LogInformation("Descrição da tarefa atualizada para: {Descricao}", atualizarTarefaDto.Descricao);
         if (tarefaExistente.DataConclusao != atualizarTarefaDto.DataConclusao)
         {
-            tarefaExistente.AtualizarDataConclusao(atualizarTarefaDto.DataConclusao, atualizarTarefaDto.UsuarioExecutorId); // Passando usuarioExecutorId
+            tarefaExistente.AtualizarDataConclusao(atualizarTarefaDto.DataConclusao, atualizarTarefaDto.UsuarioExecutorId); 
         }
 
-        // Converter string de status para o enum do domínio e aplicar a alteração
+        
         if (!string.IsNullOrEmpty(atualizarTarefaDto.Status))
         {
             var novoStatus = ParseStatus(atualizarTarefaDto.Status);
@@ -161,54 +149,56 @@ public class ServicoTarefa : IServicoTarefa
             {
                 try
                 {
-                    tarefaExistente.AlterarStatus(novoStatus, atualizarTarefaDto.UsuarioExecutorId); // Passando usuarioExecutorId
+                    _logger.LogInformation("Alterando status da tarefa de {StatusAntigo} para {StatusNovo}", tarefaExistente.Status, novoStatus);
+                    tarefaExistente.AlterarStatus(novoStatus, atualizarTarefaDto.UsuarioExecutorId); 
                 }
                 catch (ExcecaoDominio ex)
                 {
-                    // Captura exceções do domínio (ex: tentativa de reabrir tarefa concluída/cancelada)
+                    _logger.LogError("Erro ao alterar status da tarefa: {Message}", ex.Message);
                     throw new InvalidOperationException(ex.Message, ex);
                 }
             }
         }
 
-        // A prioridade não é atualizável, conforme regra de negócio (não está no DTO de atualização)
-
-        // Persistir as alterações na tarefa
+        
         await _unitOfWork.Tarefas.AtualizarAsync(tarefaExistente);
-
-        // Commitar a transação
+        _logger.LogInformation("Tarefa com ID {Id} atualizada no repositório.", id);
+               
         await _unitOfWork.CommitAsync();
+        _logger.LogInformation("Commit realizado após atualização da tarefa com ID {Id}.", id);
 
+        _logger.LogInformation("Tarefa com ID {Id} atualizada com sucesso.", id);
         return _mapper.Map<TarefaDto>(tarefaExistente);
     }
 
-    /// <summary>
-    /// Exclui uma tarefa logicamente (soft delete).
-    /// </summary>
-    /// <param name="id">ID da tarefa a ser excluída.</param>
-    /// <returns>True se a exclusão foi bem-sucedida.</returns>
+    /// <inheritdoc/>
     public async Task<bool> ExcluirAsync(Guid id)
     {
+        _logger.LogInformation("Excluindo tarefa com ID: {Id}", id);
         var tarefa = await _unitOfWork.Tarefas.ObterPorIdAsync(id);
+
         if (tarefa == null)
         {
-            return false; // Retorna false se a tarefa não existe ou já foi excluída logicamente
+            _logger.LogWarning("Tarefa com ID {Id} não encontrada ou já foi excluída logicamente.", id);
+            return false; 
         }
 
         var sucesso = await _unitOfWork.Tarefas.ExcluirAsync(id);
         if (sucesso)
         {
+            _logger.LogInformation("Tarefa com ID {Id} excluída logicamente com sucesso.", id);
             await _unitOfWork.CommitAsync();
         }
+        else
+        {
+            _logger.LogWarning("Falha ao excluir tarefa com ID {Id}. A tarefa pode já ter sido excluída logicamente.", id);
+            await _unitOfWork.RollbackAsync(); 
+        }
+
         return sucesso;
     }
 
-    /// <summary>
-    /// Adiciona um novo comentário a uma tarefa.
-    /// </summary>
-    /// <param name="criarComentarioTarefaDto">DTO contendo os dados do comentário a ser adicionado.</param>
-    /// <returns>DTO da tarefa atualizada com o novo comentário.</returns>
-    /// <exception cref="KeyNotFoundException">Lançada se a tarefa não for encontrada.</exception>
+    /// <inheritdoc/>
     public async Task<TarefaDto> AdicionarComentarioAsync(CriarComentarioTarefaDto criarComentarioTarefaDto)
     {
         // 1. Verificar se a tarefa existe
@@ -253,13 +243,7 @@ public class ServicoTarefa : IServicoTarefa
         return _mapper.Map<TarefaDto>(tarefaAtualizada);
     }
 
-    /// <summary>
-    /// Obtém um relatório de desempenho para um usuário específico.
-    /// </summary>
-    /// <param name="usuarioId">ID do usuário para o qual o relatório será gerado.</param>
-    /// <returns>DTO com os dados do relatório de desempenho.</returns>
-    /// <exception cref="UnauthorizedAccessException">Lançada se o usuário não tiver permissão (não for gerente).</exception>
-    /// <exception cref="KeyNotFoundException">Lançada se o usuário não for encontrado.</exception>
+    /// <inheritdoc/>
     public async Task<RelatorioDesempenhoDto> ObterRelatorioDesempenhoUsuarioAsync(Guid usuarioId)
     {
         // 1. Verificar se o usuário é um gerente (regra de autorização)
@@ -291,11 +275,7 @@ public class ServicoTarefa : IServicoTarefa
         return relatorio;
     }
 
-    /// <summary>
-    /// Converte uma string de prioridade para o enum `PrioridadeTarefa` do domínio.
-    /// </summary>
-    /// <param name="prioridade">String de prioridade (ex: "Baixa", "Media", "Alta").</param>
-    /// <returns>O enum `PrioridadeTarefa` correspondente.</returns>
+    /// <inheritdoc/>
     private static PrioridadeTarefa ParsePrioridade(string prioridade)
     {
         return prioridade.ToLower() switch
@@ -303,15 +283,11 @@ public class ServicoTarefa : IServicoTarefa
             "baixa" => PrioridadeTarefa.Baixa,
             "media" => PrioridadeTarefa.Media,
             "alta" => PrioridadeTarefa.Alta,
-            _ => PrioridadeTarefa.Media // Valor padrão
+            _ => PrioridadeTarefa.Media 
         };
     }
 
-    /// <summary>
-    /// Converte uma string de status para o enum `StatusTarefa` do domínio.
-    /// </summary>
-    /// <param name="status">String de status (ex: "Pendente", "EmAndamento", "Concluida", "Cancelada").</param>
-    /// <returns>O enum `StatusTarefa` correspondente.</returns>
+    /// <inheritdoc/>
     private static StatusTarefa ParseStatus(string status)
     {
         return status.ToLower() switch
@@ -320,7 +296,7 @@ public class ServicoTarefa : IServicoTarefa
             "emandamento" => StatusTarefa.EmAndamento,
             "concluida" => StatusTarefa.Concluida,
             "cancelada" => StatusTarefa.Cancelada,
-            _ => StatusTarefa.Pendente // Valor padrão
+            _ => StatusTarefa.Pendente 
         };
     }
 }

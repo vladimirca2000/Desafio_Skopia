@@ -11,7 +11,7 @@ public class HistoricoAlteracaoTarefaMapeamento : IEntityTypeConfiguration<Histo
         builder.ToTable("HistoricosAlteracaoTarefa");
 
         builder.HasKey(h => h.Id);
-        builder.Property(h => h.Id).ValueGeneratedNever(); // Id gerado pelo domínio.
+        builder.Property(h => h.Id).ValueGeneratedNever(); 
 
         builder.Property(h => h.TarefaId).IsRequired();
         builder.Property(h => h.UsuarioId).IsRequired();
@@ -21,13 +21,12 @@ public class HistoricoAlteracaoTarefaMapeamento : IEntityTypeConfiguration<Histo
             .HasMaxLength(50);
 
         builder.Property(h => h.ValorAntigo)
-            .HasColumnType("TEXT"); // Permite armazenar valores antigos de diferentes tipos como texto.
+            .HasColumnType("TEXT"); 
 
         builder.Property(h => h.ValorNovo)
-            .HasColumnType("TEXT"); // Permite armazenar valores novos de diferentes tipos como texto.
+            .HasColumnType("TEXT"); 
 
-        // REMOVIDO: HasDefaultValueSql e ValueGeneratedOnAdd.
-        // DataModificacao é definida pela entidade HistoricoAlteracaoTarefa.
+       
         builder.Property(h => h.DataModificacao)
             .IsRequired();
     }
