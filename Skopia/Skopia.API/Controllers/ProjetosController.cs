@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Skopia.Domain.Excecoes;
 using Skopia.Services.Interfaces;
 using Skopia.Services.Modelos;
-using Microsoft.Extensions.Logging;
 
 namespace Skopia.API.Controllers;
 
@@ -89,6 +90,11 @@ public class ProjetosController : ControllerBase
             _logger.LogWarning("Projeto com ID {Id} não encontrado: {Message}", id, ex.Message);
             return NotFound(ex.Message); 
         }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
+        }
     }
 
     /// <summary>
@@ -138,7 +144,7 @@ public class ProjetosController : ControllerBase
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)] 
     public async Task<ActionResult<ProjetoDto>> Atualizar(Guid id, [FromBody] AtualizarProjetoDto atualizarProjetoDto) 
     {
-        _logger.LogInformation("Atualizando projeto com ID: {Id} e dados: {@AtualizarProjetoDto}", id, atualizarProjetoDto);
+        _logger.LogInformation($"Atualizando projeto com ID: {id} e dados: {atualizarProjetoDto}");
         if (id == Guid.Empty)
         {
             _logger.LogWarning("ID do projeto vazio ao tentar atualizar projeto.");
@@ -148,7 +154,7 @@ public class ProjetosController : ControllerBase
 
         if (!ModelState.IsValid)
         {
-            _logger.LogWarning("Dados inválidos para atualização de projeto: {@ModelState}", ModelState);
+            _logger.LogWarning("Dados inválidos para atualização de projeto.");
             return BadRequest(ModelState);
         }
             
@@ -156,13 +162,18 @@ public class ProjetosController : ControllerBase
         try
         {
             var projetoAtualizado = await _servicoProjeto.AtualizarAsync(id, atualizarProjetoDto);
-            _logger.LogInformation("Projeto com ID {Id} atualizado com sucesso.", id);
+            _logger.LogInformation($"Projeto com ID {id} atualizado com sucesso.");
             return Ok(projetoAtualizado);
         }
         catch (KeyNotFoundException ex)
         {
-            _logger.LogWarning("Projeto com ID {Id} não encontrado para atualização: {Message}", id, ex.Message);
+            _logger.LogWarning($"Projeto com ID {id}: {ex.Message}.");
             return NotFound(ex.Message); // Mensagem traduzida
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
         }
     }
 
@@ -206,5 +217,16 @@ public class ProjetosController : ControllerBase
             _logger.LogError("Erro ao excluir projeto com ID {Id}: {Message}", id, ex.Message);
             return BadRequest(new { mensagem = ex.Message }); 
         }
+        catch (ExcecaoDominio ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status422UnprocessableEntity, new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
+        }
+
     }
 }

@@ -78,7 +78,6 @@ public class ServicoTarefa : IServicoTarefa
             _logger.LogWarning("Projeto com ID {ProjetoId} não encontrado ao tentar criar tarefa.", criarTarefaDto.ProjetoId);
             throw new KeyNotFoundException($"Projeto com ID {criarTarefaDto.ProjetoId} não encontrado.");
         }
-            
 
         // 2. Converter string de prioridade para o enum do domínio
         var prioridade = ParsePrioridade(criarTarefaDto.Prioridade);
@@ -93,7 +92,8 @@ public class ServicoTarefa : IServicoTarefa
             prioridade,
             criarTarefaDto.DataVencimento
         );
-        _logger.LogInformation("Nova tarefa criada: {@NovaTarefa}", novaTarefa);
+
+        projeto.Testar20Tarefa(novaTarefa);
 
         // 4. Persistir a nova tarefa (o histórico inicial é registrado no construtor da Tarefa)
         await _unitOfWork.Tarefas.CriarAsync(novaTarefa);
@@ -183,6 +183,12 @@ public class ServicoTarefa : IServicoTarefa
             return false; 
         }
 
+        if (tarefa.Status == StatusTarefa.Concluida)
+        {
+            _logger.LogWarning("Não é possível excluir uma tarefa concluída. Tarefa ID: {Id}", id);
+            throw new ExcecaoDominio("Não é possível excluir uma tarefa que já foi concluída.");
+        }
+
         var sucesso = await _unitOfWork.Tarefas.ExcluirAsync(id);
         if (sucesso)
         {
@@ -244,35 +250,35 @@ public class ServicoTarefa : IServicoTarefa
     }
 
     /// <inheritdoc/>
-    public async Task<RelatorioDesempenhoDto> ObterRelatorioDesempenhoUsuarioAsync(Guid usuarioId)
+    public async Task<IEnumerable<RelatorioDesempenhoDto>> ObterRelatorioDesempenhoUsuarioAsync(Guid usuarioId)
     {
-        // 1. Verificar se o usuário é um gerente (regra de autorização)
+        var usuario = await _unitOfWork.Usuarios.ObterPorIdAsync(usuarioId);
+        if(usuario == null)
+        {
+            _logger.LogWarning("Usuário com ID {UsuarioId} não encontrado ao tentar obter relatório de desempenho.", usuarioId);
+            throw new KeyNotFoundException($"Usuário com ID {usuarioId} não encontrado.");
+        }
+
+
         var ehGerente = await _unitOfWork.Usuarios.VerificarSeGerenteAsync(usuarioId);
         if (!ehGerente)
             throw new UnauthorizedAccessException("Somente gerentes podem acessar relatórios de desempenho.");
+            
 
-        // 2. Obter dados do usuário
-        var usuario = await _unitOfWork.Usuarios.ObterPorIdAsync(usuarioId);
-        if (usuario == null)
-            throw new KeyNotFoundException($"Usuário com ID {usuarioId} não encontrado.");
 
-        // 3. Calcular métricas de desempenho
-        var trintaDiasAtras = DateTime.UtcNow.AddDays(-30);
-        var contagemTarefasConcluidas = await _unitOfWork.Tarefas.ObterContagemTarefasConcluidasPorUsuarioDesdeDataAsync(usuarioId, trintaDiasAtras);
+        var contagemPorUsuario = await _unitOfWork.Tarefas.ObterContagemTarefasConcluidasPorUsuarioDesdeDataAsync(DateTime.UtcNow.AddDays(-30));
 
-        var mediaTarefasConcluidasPorDia = contagemTarefasConcluidas / 30.0;
-        // Garante que a média seja 0 se não houver tarefas concluídas, evitando NaN
-        if (contagemTarefasConcluidas == 0) mediaTarefasConcluidasPorDia = 0;
 
-        var relatorio = new RelatorioDesempenhoDto
+        var relatorios = contagemPorUsuario.Select(c => new RelatorioDesempenhoDto
         {
-            UsuarioId = usuarioId,
-            NomeUsuario = usuario.Nome,
-            ContagemTarefasConcluidas = contagemTarefasConcluidas,
-            MediaTarefasConcluidasPorDia = mediaTarefasConcluidasPorDia
-        };
+            UsuarioId = c.Usuario.Id,
+            NomeUsuario = c.Usuario.Nome,
+            ContagemTarefasConcluidas = c.Contagem,
+            MediaTarefasConcluidasPorDia = c.Contagem / 30.0 
+        }).ToList();
 
-        return relatorio;
+
+        return relatorios;
     }
 
     /// <inheritdoc/>

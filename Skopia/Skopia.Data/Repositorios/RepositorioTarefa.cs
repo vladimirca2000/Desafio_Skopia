@@ -74,15 +74,7 @@ namespace Skopia.Data.Repositorios
             return true;
         }
 
-        /// <inheritdoc/>
-        public async Task<int> ObterContagemTarefasConcluidasPorUsuarioDesdeDataAsync(Guid usuarioId, DateTime dataInicio)
-        {
-            _logger.LogInformation("Obtendo contagem de tarefas concluídas para o usuário com ID: {UsuarioId} desde a data: {DataInicio}", usuarioId, dataInicio);
-            return await _dbSet
-                         .CountAsync(t => t.UsuarioId == usuarioId &&
-                                          t.Status == StatusTarefa.Concluida &&
-                                          t.DataConclusao >= dataInicio);
-        }
+
 
         /// <inheritdoc/>
         public async Task AdicionarHistoricoAsync(HistoricoAlteracaoTarefa historico)
@@ -153,5 +145,33 @@ namespace Skopia.Data.Repositorios
                                            t.Status != StatusTarefa.Concluida &&
                                            t.Status != StatusTarefa.Cancelada);
         }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<(Usuario Usuario, int Contagem)>> ObterContagemTarefasConcluidasPorUsuarioDesdeDataAsync(DateTime dataInicio)
+        {
+            _logger.LogInformation("Obtendo usuários e contagem de tarefas concluídas desde a data: {DataInicio}", dataInicio);
+
+            // Executa a consulta no banco de dados
+            var resultados = await _dbSet
+                .Where(t => t.Status == StatusTarefa.Concluida && t.DataConclusao >= dataInicio)
+                .GroupBy(t => t.UsuarioId)
+                .Select(g => new { UsuarioId = g.Key, Contagem = g.Count() })
+                .ToListAsync();
+
+            // Carrega os usuários na memória
+            var usuarios = await _context.Set<Usuario>()
+                .Where(u => resultados.Select(r => r.UsuarioId).Contains(u.Id))
+                .ToListAsync();
+
+            // Junta os resultados na memória
+            return resultados
+                .Join(
+                    usuarios,
+                    resultado => resultado.UsuarioId,
+                    usuario => usuario.Id,
+                    (resultado, usuario) => (usuario, resultado.Contagem)
+                );
+        }
+
     }
 }

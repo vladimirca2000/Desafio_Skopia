@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Skopia.Domain.Excecoes;
 using Skopia.Services.Interfaces;
 using Skopia.Services.Modelos;
-using Microsoft.Extensions.Logging;
 
 namespace Skopia.API.Controllers;
 
@@ -49,6 +50,11 @@ public class TarefasController : ControllerBase
             _logger.LogWarning(ex, "Projeto com ID {ProjetoId} não encontrado ao tentar obter tarefas.", projetoId);
             return NotFound(ex.Message); 
         }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
+        }
     }
 
     /// <summary>
@@ -95,7 +101,7 @@ public class TarefasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)] 
-    public async Task<ActionResult<TarefaDto>> Criar([FromBody] CriarTarefaDto criarTarefaDto) 
+    public async Task<ActionResult<TarefaDto>> CriarTarefa([FromBody] CriarTarefaDto criarTarefaDto) 
     {
         _logger.LogInformation("Tentativa de criar nova tarefa: {Titulo} para o projeto ID: {ProjetoId}", criarTarefaDto.Titulo, criarTarefaDto.ProjetoId);
 
@@ -122,15 +128,26 @@ public class TarefasController : ControllerBase
             _logger.LogWarning(ex, "Regra de negócio violada ao criar tarefa '{Titulo}' para o projeto ID: {ProjetoId}. Mensagem: {Message}", criarTarefaDto.Titulo, criarTarefaDto.ProjetoId, ex.Message);
             return BadRequest(new { mensagem = ex.Message });
         }
+        catch (ExcecaoDominio ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status422UnprocessableEntity, new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
+        }
+
     }
 
-    /// <summary>
-    /// Atualiza uma tarefa existente.
-    /// </summary>
-    /// <param name="id">ID da tarefa.</param>
-    /// <param name="atualizarTarefaDto">Dados da tarefa para atualização.</param>
-    /// <returns>Tarefa atualizada.</returns>
-    [HttpPut("{id}")]
+        /// <summary>
+        /// Atualiza uma tarefa existente.
+        /// </summary>
+        /// <param name="id">ID da tarefa.</param>
+        /// <param name="atualizarTarefaDto">Dados da tarefa para atualização.</param>
+        /// <returns>Tarefa atualizada.</returns>
+        [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -169,6 +186,11 @@ public class TarefasController : ControllerBase
             _logger.LogWarning(ex, "Regra de negócio violada ao atualizar tarefa com ID {Id}. Mensagem: {Message}", id, ex.Message);
             return BadRequest(new { mensagem = ex.Message }); 
         }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
+        }
     }
 
     /// <summary>
@@ -191,17 +213,38 @@ public class TarefasController : ControllerBase
             _logger.LogWarning("Tentativa de excluir tarefa com ID vazio.");
             return BadRequest("O ID da tarefa não pode ser vazio."); 
         }
-            
 
-        var resultado = await _servicoTarefa.ExcluirAsync(id);
-        if (!resultado)
+        try
         {
-            _logger.LogWarning("Tarefa com ID {Id} não encontrada para exclusão.", id);
-            return NotFound($"Tarefa com ID {id} não encontrada."); 
+            var resultado = await _servicoTarefa.ExcluirAsync(id);
+            if (!resultado)
+            {
+                _logger.LogWarning("Tarefa com ID {Id} não encontrada para exclusão.", id);
+                return NotFound($"Tarefa com ID {id} não encontrada.");
+            }
+            _logger.LogInformation("Tarefa com ID {Id} excluída com sucesso (soft delete).", id);
+            return NoContent();
         }
-            
-        _logger.LogInformation("Tarefa com ID {Id} excluída com sucesso (soft delete).", id);
-        return NoContent(); 
+        catch (ExcecaoDominio ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status422UnprocessableEntity, new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
+        }
+
+        //var resultado = await _servicoTarefa.ExcluirAsync(id);
+        //if (!resultado)
+        //{
+        //    _logger.LogWarning("Tarefa com ID {Id} não encontrada para exclusão.", id);
+        //    return NotFound($"Tarefa com ID {id} não encontrada."); 
+        //}
+
+        //_logger.LogInformation("Tarefa com ID {Id} excluída com sucesso (soft delete).", id);
+        //return NoContent(); 
     }
 
     /// <summary>
@@ -237,6 +280,11 @@ public class TarefasController : ControllerBase
             _logger.LogWarning(ex, "Tarefa com ID {TarefaId} não encontrada ao tentar adicionar comentário.", criarComentarioTarefaDto.TarefaId);
             return NotFound(ex.Message); 
         }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
+        }
     }
 
     /// <summary>
@@ -264,19 +312,24 @@ public class TarefasController : ControllerBase
 
         try
         {
-            var relatorio = await _servicoTarefa.ObterRelatorioDesempenhoUsuarioAsync(usuarioId);
-            _logger.LogInformation("Relatório de desempenho obtido com sucesso para o usuário ID: {UsuarioId}", usuarioId);
-            return Ok(relatorio);
+            var relatorios = await _servicoTarefa.ObterRelatorioDesempenhoUsuarioAsync(usuarioId);
+            _logger.LogInformation("Relatório de desempenho obtido com sucesso");
+            return Ok(relatorios);
         }
         catch (KeyNotFoundException ex)
         {
-            _logger.LogWarning(ex, "Usuário com ID {UsuarioId} não encontrado ao tentar obter relatório de desempenho.", usuarioId);
+            _logger.LogWarning(ex, $"Usuário com ID {usuarioId} não encontrado ao tentar obter relatório de desempenho.");
             return NotFound(ex.Message);
         }
         catch (UnauthorizedAccessException ex)
         {
-            _logger.LogWarning(ex, "Usuário ID: {UsuarioId} tentou acessar relatório de desempenho sem ser gerente.", usuarioId);
-            return StatusCode(StatusCodes.Status403Forbidden, new { mensagem = ex.Message }); 
+            _logger.LogWarning(ex, $"Usuário ID: {usuarioId} tentou acessar relatório de desempenho sem ser gerente.");
+            return StatusCode(StatusCodes.Status403Forbidden, new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = ex.Message });
         }
     }
 }

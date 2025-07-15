@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
-using Skopia.Domain.Entidades;
-using Skopia.Domain.Servicos.Interfaces;
-using Skopia.Services.Modelos;
-using Skopia.Domain.Interfaces.UnitOfWork;
-using Skopia.Services.Interfaces;
 using Microsoft.Extensions.Logging; 
+using Skopia.Domain.Entidades;
+using Skopia.Domain.Excecoes;
+using Skopia.Domain.Interfaces.UnitOfWork;
+using Skopia.Domain.Servicos.Interfaces;
+using Skopia.Services.Interfaces;
+using Skopia.Services.Modelos;
 
 namespace Skopia.Services.Servicos
 {
@@ -92,8 +93,6 @@ namespace Skopia.Services.Servicos
                 criarProjetoDto.Descricao,
                 criarProjetoDto.UsuarioId
             );
-            _logger.LogInformation("Projeto criado com nome: {Nome}, descrição: {Descricao}, usuário ID: {UsuarioId}", 
-                projeto.Nome, projeto.Descricao, projeto.UsuarioId);
 
             _logger.LogInformation("Iniciando a criação do projeto no repositório.");
             var projetoCriado = await _unitOfWork.Projetos.CriarAsync(projeto); 
@@ -171,7 +170,7 @@ namespace Skopia.Services.Servicos
             if (!podeRemover)
             {
                 _logger.LogWarning("Tentativa de exclusão de projeto com ID {Id} falhou porque ele possui tarefas pendentes.", id);
-                throw new InvalidOperationException("Não é possível excluir o projeto porque ele possui tarefas pendentes. Conclua ou remova todas as tarefas primeiro.");
+                throw new ExcecaoDominio("Não é possível excluir o projeto porque ele possui tarefas pendentes. Conclua ou remova todas as tarefas primeiro.");
             }
 
             var sucesso = await _unitOfWork.Projetos.ExcluirAsync(id); 

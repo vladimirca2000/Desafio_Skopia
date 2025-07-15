@@ -19,7 +19,7 @@ namespace Skopia.CrossCutting;
 
 public static class DependencyInjection
 { 
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, ILogger<DependencyInjection> logger)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
        
 
@@ -41,7 +41,14 @@ public static class DependencyInjection
         });
 
 
-        
+        services.AddScoped<IRepositorioProjeto>(provider =>
+        {
+            var context = provider.GetRequiredService<SkopiaDbContext>();
+            var logger = provider.GetRequiredService<ILogger<RepositorioProjeto>>();
+            return new RepositorioProjeto(context, logger);
+        });
+
+
         services.AddScoped<IRepositorioProjeto, RepositorioProjeto>();
         services.AddScoped<IRepositorioTarefa, RepositorioTarefa>();
         services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();

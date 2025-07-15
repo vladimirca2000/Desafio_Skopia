@@ -61,16 +61,11 @@ public class Projeto : EntidadeBase
     }
 
     
-    public void AdicionarTarefa(Tarefa novaTarefa)
+    public void Testar20Tarefa(Tarefa novaTarefa)
     {
-        ExcecaoDominio.Quando(novaTarefa == null, "A tarefa não pode ser nula.");
-
-        ExcecaoDominio.Quando(novaTarefa?.ProjetoId != this.Id, "A tarefa pertence a outro projeto e não pode ser adicionada aqui.");
-
+        ExcecaoDominio.Quando(novaTarefa?.ProjetoId != Id, "A tarefa pertence a outro projeto e não pode ser adicionada aqui.");
         ExcecaoDominio.Quando(_tarefas.Count >= LIMITE_MAXIMO_TAREFAS,
             $"Limite máximo de {LIMITE_MAXIMO_TAREFAS} tarefas por projeto atingido. Não é possível adicionar mais tarefas.");
-        if (novaTarefa is not null)
-            _tarefas.Add(novaTarefa);
     }
 
     
@@ -78,9 +73,6 @@ public class Projeto : EntidadeBase
     {
         var tarefaParaRemover = _tarefas.FirstOrDefault(t => t.Id == tarefaId);
         ExcecaoDominio.Quando(tarefaParaRemover == null, "Tarefa não encontrada neste projeto.");
-
-        if (tarefaParaRemover is not null)
-            _tarefas.Remove(tarefaParaRemover);
     }
 
    

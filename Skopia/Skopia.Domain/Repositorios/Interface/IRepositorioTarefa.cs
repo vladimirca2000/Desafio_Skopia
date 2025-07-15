@@ -13,7 +13,8 @@ public interface IRepositorioTarefa
 
     Task<bool> ExcluirAsync(Guid id);
 
-    Task<int> ObterContagemTarefasConcluidasPorUsuarioDesdeDataAsync(Guid usuarioId, DateTime dataInicio);
+    //Task<int> ObterContagemTarefasConcluidasPorUsuarioDesdeDataAsync(DateTime dataInicio);
+    Task<IEnumerable<(Usuario Usuario, int Contagem)>> ObterContagemTarefasConcluidasPorUsuarioDesdeDataAsync(DateTime dataInicio);
 
     Task AdicionarHistoricoAsync(HistoricoAlteracaoTarefa historico);
 
@@ -24,4 +25,6 @@ public interface IRepositorioTarefa
     Task<IEnumerable<Tarefa>> ObterTarefasPorPeriodoDeVencimentoAsync(DateTime dataInicioVencimento, DateTime dataFimVencimento);
 
     Task<bool> PossuiTarefasPendentesParaProjetoAsync(Guid projetoId);
+
+    
 }

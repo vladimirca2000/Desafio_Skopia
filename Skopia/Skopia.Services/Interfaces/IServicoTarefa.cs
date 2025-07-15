@@ -17,5 +17,5 @@ public interface IServicoTarefa
 
     Task<TarefaDto> AdicionarComentarioAsync(CriarComentarioTarefaDto criarComentarioTarefaDto);
 
-    Task<RelatorioDesempenhoDto> ObterRelatorioDesempenhoUsuarioAsync(Guid usuarioId);
+    Task<IEnumerable<RelatorioDesempenhoDto>> ObterRelatorioDesempenhoUsuarioAsync(Guid usuarioId);
 }
