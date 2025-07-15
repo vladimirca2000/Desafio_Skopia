@@ -20,7 +20,7 @@ public class Projeto : EntidadeBase
     private const int LIMITE_MAXIMO_TAREFAS = 20;
 
     
-    protected Projeto() : base()
+    protected Projeto(Guid guid) : base()
     {
         _tarefas = new List<Tarefa>();
     }
