@@ -85,3 +85,7 @@ Essas perguntas ajudam a garantir que o desenvolvimento esteja alinhado com as e
    - Utilizar ferramentas como GitHub Actions ou Azure DevOps para gerenciar o ciclo de vida do desenvolvimento.
 
 Essas melhorias e estratégias garantem que o projeto esteja preparado para crescer e atender às demandas futuras com eficiência e qualidade.
+
+
+
+#### Testes Comentados serão resolvidos
